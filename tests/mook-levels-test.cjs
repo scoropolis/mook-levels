@@ -196,11 +196,21 @@ let browser;
   const purpleFade = await page.evaluate(index => {
     const cell = document.querySelectorAll('.cell')[index];
     const style = getComputedStyle(cell);
-    return { className: cell.className, animationName: style.animationName, animationDuration: style.animationDuration };
+    const veil = getComputedStyle(cell, '::after');
+    return { className: cell.className, animationName: style.animationName, animationDuration: style.animationDuration, veilAnimationName: veil.animationName, veilAnimationDuration: veil.animationDuration };
   }, state.purple[0]);
   assert.match(purpleFade.className, /fading/);
   assert.equal(purpleFade.animationName, 'purpleFade');
   assert.equal(purpleFade.animationDuration, '1s');
+  assert.equal(purpleFade.veilAnimationName, 'purpleVeil');
+  assert.equal(purpleFade.veilAnimationDuration, '1s');
+  await wait(500);
+  const purpleMidFade = await page.evaluate(index => {
+    const style = getComputedStyle(document.querySelectorAll('.cell')[index]);
+    return { opacity: Number(style.opacity), transform: style.transform };
+  }, state.purple[0]);
+  assert.ok(purpleMidFade.opacity < 0.72, `purple should be visibly transparent halfway through; got ${purpleMidFade.opacity}`);
+  assert.notEqual(purpleMidFade.transform, 'none', 'purple should visibly shrink during its one-second fade');
   const missesBeforePurpleExpiry = state.misses;
   await wait(1300);
   state = await page.evaluate(() => window.__mookLevels.getState());
