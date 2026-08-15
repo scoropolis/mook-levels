@@ -24,7 +24,7 @@ A separate level-based edition of Mook. The original endless score-chaser remain
 - Stage 4 Levels 5–9 vary regular rocks from two to four hits; Level 10 can also produce five-hit rocks
 - Stage 5: adds one-second purple tap cells; every level waits on a purple opener before its timer starts
 - Stage 6: Reverse Realm swaps green/red behavior and requires swiping opposite blue arrows
-- Reverse Realm ramps in groups: Levels 1–2 use only reversed red/green; Levels 3–5 add opposite arrows; Level 6 adds yellow; Level 7 adds rocks; Levels 8–10 include every item at easy, medium, and hard pacing
+- Reverse Realm ramps in groups: Levels 1–2 use paced reversed red/green mixes with guaranteed green traps; Levels 3–5 add opposite arrows; Level 6 adds yellow; Level 7 adds rocks; Levels 8–10 include every item at easy, medium, and hard pacing
 - Stage 7: Quantum Flux flips green/red cells and arrow directions after one second; rocks hide their strength until the first hit
 
 ## Run locally

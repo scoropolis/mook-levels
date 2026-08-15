@@ -195,6 +195,7 @@
   let token = 0;
   let worldCellAccumulator = 0;
   let modePoolCursor = 0;
+  let redTrapAccumulator = .5;
   let activeGreens = new Map();
   let redCells = new Map();
   let blueCells = new Map();
@@ -247,7 +248,7 @@
     let maxGreens=step >= 8 ? 3 : step >= 4 ? 2 : 1;
     if(stageIndex===5){
       beatMs=[1200,950,1150,950,780,1000,900,1050,850,680][step-1];
-      redChance=[.10,.20,.10,.18,.26,.16,.20,.14,.22,.30][step-1];
+      redChance=[.25,.30,.10,.18,.26,.16,.20,.14,.22,.30][step-1];
       maxGreens=[1,2,1,2,3,2,2,1,2,3][step-1];
     }
     return {
@@ -309,7 +310,7 @@
     if (level > unlockedThrough || level < 1 || level > 70) return;
     clearRun();
     currentLevel = level; config = getLevelConfig(level); score = 0; misses = 0;
-    playing = true; levelStarted = false; startedAt = 0; worldCellAccumulator = 0; modePoolCursor = 0; token += 1;
+    playing = true; levelStarted = false; startedAt = 0; worldCellAccumulator = 0; modePoolCursor = 0; redTrapAccumulator = .5; token += 1;
     stageLabel.textContent = `Stage ${config.stage} · ${STAGES[config.stage - 1].name}`;
     levelLabel.textContent = `Level ${config.step}`;
     scoreEl.textContent = '0'; timeLeft.textContent = '30'; timerFill.style.transform = 'scaleX(1)';
@@ -459,11 +460,16 @@
     if(index<0){worldCellAccumulator=accumulatorBefore;modePoolCursor=cursorBefore;}
     return index;
   }
+  function shouldSpawnRed(){
+    if(config.mode==='opposite'&&config.step<=2){redTrapAccumulator+=config.redChance;if(redTrapAccumulator+1e-9>=1){redTrapAccumulator-=1;return true;}return false;}
+    return Math.random()<config.redChance;
+  }
   function nextCycle() {
     if(!playing||!levelStarted)return;
     const targetCount=config.maxGreens===1?1:Math.random()<(.15+config.step*.055)?config.maxGreens:1;
     for(let i=0;i<targetCount;i++)spawnActionTarget();
-    if(Math.random()<config.redChance)spawnRed();
+    const trapAccumulatorBefore=redTrapAccumulator;
+    if(shouldSpawnRed()&&spawnRed()<0&&config.mode==='opposite'&&config.step<=2)redTrapAccumulator=trapAccumulatorBefore;
     cycleTimer=setTimeout(nextCycle,config.beatMs);
   }
   function resolveSuccess(type,index) {
@@ -504,11 +510,12 @@
   function spawnForTest(type){return({green:spawnGreen,red:spawnRed,blue:spawnBlue,yellow:spawnYellow,rock:spawnRock,purple:spawnPurple}[type]||(()=>-1))();}
   function clearTargetsForTest(){clearTargets();graceCells.clear();}
   function worldMixSequenceForTest(count){const saved=worldCellAccumulator,savedCursor=modePoolCursor;worldCellAccumulator=0;modePoolCursor=0;const sequence=Array.from({length:count},()=>nextWorldTargetType());worldCellAccumulator=saved;modePoolCursor=savedCursor;return sequence;}
+  function redTrapSequenceForTest(count){const saved=redTrapAccumulator;redTrapAccumulator=.5;const sequence=Array.from({length:count},()=>shouldSpawnRed());redTrapAccumulator=saved;return sequence;}
   function getState(){return{screen,level:currentLevel,playing,levelStarted,onboarding,onboardingType,score,misses,active:[...activeGreens.keys()],red:[...redCells.keys()],blue:[...blueCells.entries()].map(([index,item])=>({index,direction:item.direction,shownDirection:item.shownDirection,tutorial:item.tutorial})),yellow:[...yellowCells.keys()],rock:[...rockCells.entries()].map(([index,item])=>({index,hits:item.hits,hidden:Boolean(item.hidden),tutorial:item.tutorial})),purple:[...purpleCells.keys()],unlockedThrough};}
 
   mapBack.addEventListener('click',returnToMap);
   renderMap();
-  window.__mookLevels={getLevelConfig,getState,selectLevel,tap,resolveSwipe,beginHold,endHold,hitRock,finishLevelForTest,unlockThroughForTest,returnToMap,spawnForTest,expireForTest:expireTarget,clearTargetsForTest,worldMixSequenceForTest,pauseForTest:()=>clearTimeout(cycleTimer)};
+  window.__mookLevels={getLevelConfig,getState,selectLevel,tap,resolveSwipe,beginHold,endHold,hitRock,finishLevelForTest,unlockThroughForTest,returnToMap,spawnForTest,expireForTest:expireTarget,clearTargetsForTest,worldMixSequenceForTest,redTrapSequenceForTest,pauseForTest:()=>clearTimeout(cycleTimer)};
 </script>
 </body>
 </html>
