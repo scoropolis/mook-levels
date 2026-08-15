@@ -75,8 +75,7 @@
     .cell.yellow.tutorial:before{content:"HOLD";position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(20px,7vw,34px);letter-spacing:.06em}.cell.yellow.holding{animation:hold 1s linear forwards}
     .cell.rock{background:radial-gradient(circle at 34% 26%,rgba(255,255,255,.28),transparent 22%),linear-gradient(145deg,#9aa9b0,#55636b);border-color:#c7d1d5;box-shadow:0 5px 0 #46535a}.cell.rock:before{content:attr(data-hits);position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(48px,18vw,82px);text-shadow:0 3px 0 rgba(0,0,0,.25)}
     .cell.purple{background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.42),transparent 30%),var(--purple);border-color:#dbb6ff;box-shadow:0 5px 0 #7133b2}
-    .cell.purple.fading{overflow:hidden;animation:purpleFade 1s linear forwards}
-    .cell.purple.fading:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(244,224,255,.92));animation:purpleVeil 1s linear forwards;pointer-events:none}
+    .cell.purple.fading{animation:purpleFade 1s linear forwards}
     .cell.tutorial:after{content:attr(data-prompt);position:absolute;left:8px;right:8px;bottom:12px;text-align:center;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
     .cell.hit{animation:hit .28s ease-out}.cell.wrong{animation:wrong .3s linear}
     .level-overlay{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:28px;background:rgba(23,40,56,.82);backdrop-filter:blur(10px)}.level-overlay.hidden{display:none}
@@ -87,13 +86,10 @@
     @keyframes hit{50%{transform:scale(1.08);filter:brightness(1.25)}to{opacity:.3;transform:scale(.7)}}
     @keyframes wrong{25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}}
     @keyframes hold{to{transform:scale(.28);border-radius:50%;filter:brightness(1.2)}}
-    @keyframes purpleFade{0%{opacity:1;transform:scale(1);filter:brightness(1.15) saturate(1.25)}25%{opacity:.7;transform:scale(.92);filter:brightness(1.05) saturate(.92)}50%{opacity:.43;transform:scale(.8);filter:brightness(.92) saturate(.62)}100%{opacity:.03;transform:scale(.58);filter:brightness(.7) saturate(.2)}}
-    @keyframes purpleVeil{from{transform:translateY(105%)}to{transform:translateY(0)}}
-    @keyframes purpleFadeReduced{from{opacity:1;filter:saturate(1.2)}to{opacity:.04;filter:saturate(.2)}}
-    @keyframes purpleVeilReduced{from{opacity:0}to{opacity:1}}
+    @keyframes purpleFade{from{opacity:1}to{opacity:.03}}
     @keyframes toast{20%,75%{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-12px)}}
     @media(max-height:650px){.game-top{padding-top:8px}.mission{margin-bottom:6px}.board{gap:6px}.cell{border-radius:17px}}
-    @media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}.cell.purple.fading{animation:purpleFadeReduced 1s linear forwards!important}.cell.purple.fading:after{animation:purpleVeilReduced 1s linear forwards!important}}
+    @media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}.cell.purple.fading{animation:purpleFade 1s linear forwards!important}}
   </style>
 </head>
 <body>
