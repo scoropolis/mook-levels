@@ -1,0 +1,12 @@
+{
+  "name": "mook-levels",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A level-based world-map edition of Mook",
+  "scripts": {
+    "test": "node tests/mook-levels-test.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.55.0"
+  }
+}

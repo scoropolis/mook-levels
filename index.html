@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#65d6c5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Mook Worlds</title>
+  <style>
+    :root {
+      --ink:#172838; --paper:#fff8e9; --green:#40da78; --red:#ff646c;
+      --blue:#55bdf6; --yellow:#ffd24f; --rock:#71818b; --navy:#172838;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;min-height:100%;background:#65d6c5;color:var(--ink);font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif}
+    body{overscroll-behavior:none;user-select:none}
+    button{font:inherit}
+    .app{width:min(100vw,520px);min-height:100dvh;margin:auto;position:relative;background:var(--paper);overflow:hidden;box-shadow:0 0 80px rgba(23,40,56,.22)}
+    .screen{display:none;min-height:100dvh}.screen.active{display:block}
+
+    /* World map */
+    .map-screen{height:100dvh;overflow-y:auto;background:linear-gradient(#73dcf1 0 16%,#c6f4d5 16% 100%);scrollbar-width:none}
+    .map-screen::-webkit-scrollbar{display:none}
+    .map-hero{position:relative;min-height:190px;padding:max(22px,env(safe-area-inset-top)) 22px 28px;overflow:hidden;background:linear-gradient(155deg,#68d9ed,#96ebdd)}
+    .map-hero:before,.map-hero:after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.3)}
+    .map-hero:before{width:180px;height:65px;right:-30px;top:28px}.map-hero:after{width:125px;height:44px;left:-35px;top:100px}
+    .hero-row{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between}
+    .eyebrow{font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;opacity:.66}
+    .world-progress{padding:8px 12px;border:2px solid rgba(23,40,56,.14);border-radius:99px;background:rgba(255,255,255,.55);font-weight:950;font-size:12px}
+    .map-logo{position:relative;z-index:1;margin:20px 0 5px;font-size:58px;line-height:.8;letter-spacing:-.075em;font-weight:1000}
+    .map-logo span{display:block;font-size:19px;line-height:1.2;letter-spacing:.13em;text-transform:uppercase;color:#157a70}
+    .map-title{position:relative;z-index:1;margin-top:14px;font-size:14px;font-weight:900;color:#31596a}
+    .map-wrap{padding:0 12px 38px;background:linear-gradient(#c6f4d5,#fff1bd 48%,#d9e8f1)}
+    .stage-card{position:relative;margin:0 0 18px;padding:22px 14px 26px;border:3px solid rgba(23,40,56,.16);border-radius:30px;overflow:hidden;box-shadow:0 12px 0 rgba(23,40,56,.1),0 22px 40px rgba(23,40,56,.1)}
+    .stage-card:first-child{margin-top:-8px}
+    .stage-green{background:linear-gradient(155deg,#d4f6b9,#72df9a)}
+    .stage-blue{background:linear-gradient(155deg,#d8f4ff,#78c9fa)}
+    .stage-yellow{background:linear-gradient(155deg,#fff4b3,#ffc95d)}
+    .stage-rock{background:linear-gradient(155deg,#dce7ec,#82949e)}
+    .stage-card:after{content:"";position:absolute;width:190px;height:190px;border-radius:50%;right:-80px;bottom:-100px;background:rgba(255,255,255,.2)}
+    .stage-head{position:relative;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;margin:0 6px 20px}
+    .stage-number{font-size:10px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;opacity:.55}
+    .stage-name{margin:3px 0 0;font-size:27px;line-height:1;font-weight:1000;letter-spacing:-.045em}
+    .stage-icon{width:45px;height:45px;display:grid;place-items:center;border:2px solid rgba(23,40,56,.13);border-radius:15px;background:rgba(255,255,255,.5);font-size:23px;font-weight:1000}
+    .level-path{position:relative;z-index:2;display:grid;grid-template-columns:repeat(5,1fr);gap:22px 8px;padding:6px 4px}
+    .level-path:before{content:"";position:absolute;left:9%;right:9%;top:25%;height:50%;border-top:5px dotted rgba(23,40,56,.2);border-bottom:5px dotted rgba(23,40,56,.2);transform:skewY(-2deg);pointer-events:none}
+    .level-node{position:relative;z-index:1;aspect-ratio:1;border:3px solid rgba(23,40,56,.16);border-radius:50%;color:#6b7b82;background:rgba(255,255,255,.46);font-weight:1000;font-size:17px;box-shadow:0 5px 0 rgba(23,40,56,.14);cursor:not-allowed}
+    .level-node:nth-child(n+6){grid-row:2}.level-node:nth-child(6){grid-column:5}.level-node:nth-child(7){grid-column:4}.level-node:nth-child(8){grid-column:3}.level-node:nth-child(9){grid-column:2}.level-node:nth-child(10){grid-column:1}
+    .level-node.unlocked{cursor:pointer;color:var(--ink);background:#fff;border-color:#fff;box-shadow:0 5px 0 rgba(23,40,56,.18),0 8px 18px rgba(23,40,56,.12)}
+    .level-node.complete{color:white;background:var(--navy);border-color:var(--navy)}
+    .level-node.current{animation:pulse 1.8s ease-in-out infinite;outline:5px solid rgba(255,255,255,.42)}
+    .level-node.locked:after{content:"•";position:absolute;right:-1px;bottom:-3px;width:17px;height:17px;display:grid;place-items:center;border-radius:50%;color:white;background:#71818b;font-size:11px}
+    .stage-gate{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);padding:5px 14px;border-radius:12px 12px 0 0;background:rgba(23,40,56,.76);color:white;font-size:9px;font-weight:950;letter-spacing:.12em;text-transform:uppercase}
+
+    /* Game */
+    .game-screen{height:100dvh;background:linear-gradient(165deg,#e8fff4,#fff8e9 45%,#edf7ff)}
+    .game-shell{height:100dvh;display:grid;grid-template-rows:auto auto auto 1fr;position:relative}
+    .game-top{padding:max(14px,env(safe-area-inset-top)) 14px 10px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+    .map-back{width:42px;height:42px;border:2px solid #d7e0dc;border-radius:14px;background:white;color:var(--ink);font-weight:1000;box-shadow:0 4px 0 #d7e0dc}
+    .level-heading{text-align:center}.level-heading small{display:block;font-size:9px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#72828b}.level-heading strong{font-size:18px;letter-spacing:-.03em}
+    .score-box{text-align:right;font-variant-numeric:tabular-nums}.score-box small{display:block;font-size:9px;font-weight:900;text-transform:uppercase;color:#72828b}.score-box b{font-size:21px}
+    .status-row{padding:0 16px 10px;display:flex;align-items:center;gap:12px}.level-timer{flex:1;height:10px;border:2px solid #d7e0dc;border-radius:99px;background:white;overflow:hidden}.level-timer-fill{height:100%;width:100%;transform-origin:left;background:linear-gradient(90deg,#42dd7c,#58c7ef);transition:background .2s}.time-left{width:38px;font-size:13px;font-weight:1000;font-variant-numeric:tabular-nums}.lives{display:flex;gap:5px}.life{width:10px;height:10px;border-radius:50%;background:#ff646c;box-shadow:0 2px 0 #c3434b}.life.lost{background:#d7e0dc;box-shadow:none}
+    .mission{min-height:32px;margin:0 12px 9px;padding:7px 11px;border:2px solid rgba(23,40,56,.08);border-radius:12px;background:rgba(255,255,255,.72);text-align:center;font-size:11px;font-weight:900;color:#56707b}
+    .board{min-height:0;padding:0 8px max(8px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(4,1fr);gap:8px}
+    .cell{position:relative;min-height:0;border:3px solid #dce7e3;border-radius:22px;background:rgba(255,255,255,.78);box-shadow:0 5px 0 #dce7e3;overflow:hidden;touch-action:none;color:white;font-weight:1000;transition:transform .08s ease,background .14s ease}
+    .cell:active{transform:translateY(2px)}
+    .cell.green{background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.38),transparent 30%),var(--green);border-color:#8af0ad;box-shadow:0 5px 0 #21a957}
+    .cell.red{background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.35),transparent 30%),var(--red);border-color:#ffafb3;box-shadow:0 5px 0 #cf3f48}
+    .cell.blue{background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.38),transparent 30%),var(--blue);border-color:#b5e8ff;box-shadow:0 5px 0 #218dc7}
+    .cell.blue:before{content:attr(data-arrow);position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(48px,18vw,84px);text-shadow:0 3px 0 rgba(20,100,150,.24)}
+    .cell.yellow{background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.42),transparent 30%),var(--yellow);border-color:#fff0a8;box-shadow:0 5px 0 #d49a19;color:#5b4300}
+    .cell.yellow:before{content:"HOLD";position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(20px,7vw,34px);letter-spacing:.06em}.cell.yellow.holding{animation:hold 1s linear forwards}
+    .cell.rock{background:radial-gradient(circle at 34% 26%,rgba(255,255,255,.28),transparent 22%),linear-gradient(145deg,#9aa9b0,#55636b);border-color:#c7d1d5;box-shadow:0 5px 0 #46535a}.cell.rock:before{content:attr(data-hits);position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(48px,18vw,82px);text-shadow:0 3px 0 rgba(0,0,0,.25)}
+    .cell.tutorial:after{content:attr(data-prompt);position:absolute;left:8px;right:8px;bottom:12px;text-align:center;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+    .cell.hit{animation:hit .28s ease-out}.cell.wrong{animation:wrong .3s linear}
+    .level-overlay{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:28px;background:rgba(23,40,56,.82);backdrop-filter:blur(10px)}.level-overlay.hidden{display:none}
+    .result-card{width:min(100%,340px);padding:28px;border:3px solid rgba(23,40,56,.14);border-radius:28px;background:var(--paper);text-align:center;box-shadow:0 12px 0 rgba(0,0,0,.18)}
+    .result-badge{width:76px;height:76px;margin:auto;display:grid;place-items:center;border-radius:24px;background:#55d98a;font-size:36px;font-weight:1000;transform:rotate(-4deg)}.result-card h2{margin:18px 0 8px;font-size:38px;letter-spacing:-.06em}.result-card p{margin:0 0 22px;color:#687982}.result-actions{display:grid;gap:9px}.result-actions button{min-height:50px;border:0;border-radius:15px;font-weight:950}.result-primary{color:white;background:var(--navy)}.result-secondary{color:var(--ink);background:#e8eeeb}
+    .toast{position:absolute;z-index:4;left:50%;top:22%;transform:translate(-50%,-20px);padding:10px 16px;border-radius:99px;color:white;background:var(--navy);font-size:12px;font-weight:950;opacity:0;pointer-events:none}.toast.show{animation:toast .9s ease both}
+    @keyframes pulse{50%{transform:scale(1.1);box-shadow:0 7px 0 rgba(23,40,56,.18),0 0 0 8px rgba(255,255,255,.25)}}
+    @keyframes hit{50%{transform:scale(1.08);filter:brightness(1.25)}to{opacity:.3;transform:scale(.7)}}
+    @keyframes wrong{25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}}
+    @keyframes hold{to{transform:scale(.28);border-radius:50%;filter:brightness(1.2)}}
+    @keyframes toast{20%,75%{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-12px)}}
+    @media(max-height:650px){.game-top{padding-top:8px}.mission{margin-bottom:6px}.board{gap:6px}.cell{border-radius:17px}}
+    @media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+  </style>
+</head>
+<body>
+<main class="app">
+  <section class="screen map-screen active" id="mapScreen">
+    <header class="map-hero">
+      <div class="hero-row"><span class="eyebrow">Level journey</span><span class="world-progress" id="worldProgress">0 / 40</span></div>
+      <div class="map-logo">Mook<span>Worlds</span></div>
+      <div class="map-title" id="mapTitle">Green Valley · Level 1 awaits</div>
+    </header>
+    <div class="map-wrap" id="mapWrap"></div>
+  </section>
+
+  <section class="screen game-screen" id="gameScreen">
+    <div class="game-shell">
+      <header class="game-top">
+        <button class="map-back" id="mapBack" aria-label="Return to world map">‹</button>
+        <div class="level-heading"><small id="stageLabel">Stage 1</small><strong id="levelLabel">Level 1</strong></div>
+        <div class="score-box"><small>Score</small><b id="score">0</b></div>
+      </header>
+      <div class="status-row">
+        <div class="lives"><i class="life"></i><i class="life"></i><i class="life"></i><i class="life"></i></div>
+        <div class="level-timer"><div class="level-timer-fill" id="timerFill"></div></div>
+        <div class="time-left" id="timeLeft">60</div>
+      </div>
+      <div class="mission" id="mission">Tap the first green to start</div>
+      <section class="board" id="board" aria-label="Mook game board"></section>
+      <div class="toast" id="toast">Nice!</div>
+      <section class="level-overlay hidden" id="levelOverlay">
+        <div class="result-card">
+          <div class="result-badge" id="resultBadge">✓</div>
+          <h2 id="resultTitle">Level clear!</h2>
+          <p id="resultCopy">The next level is open.</p>
+          <div class="result-actions">
+            <button class="result-primary" id="resultPrimary">World map</button>
+            <button class="result-secondary" id="resultSecondary">Retry level</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+</main>
+<script>
+  const STAGES = [
+    { name:'Green Valley', icon:'●', className:'stage-green', mechanic:'green', description:'Tap & dodge' },
+    { name:'Sky Current', icon:'↗', className:'stage-blue', mechanic:'blue', description:'Swipe the arrows' },
+    { name:'Sunhold Sands', icon:'☀', className:'stage-yellow', mechanic:'yellow', description:'Press and hold' },
+    { name:'Stone Summit', icon:'◆', className:'stage-rock', mechanic:'rock', description:'Break the rocks' }
+  ];
+  const LEVEL_DURATION_MS = 60000;
+  const SWIPE_THRESHOLD = 32;
+  const board = document.querySelector('#board');
+  const mapScreen = document.querySelector('#mapScreen');
+  const gameScreen = document.querySelector('#gameScreen');
+  const mapWrap = document.querySelector('#mapWrap');
+  const mapTitle = document.querySelector('#mapTitle');
+  const worldProgress = document.querySelector('#worldProgress');
+  const stageLabel = document.querySelector('#stageLabel');
+  const levelLabel = document.querySelector('#levelLabel');
+  const scoreEl = document.querySelector('#score');
+  const timerFill = document.querySelector('#timerFill');
+  const timeLeft = document.querySelector('#timeLeft');
+  const mission = document.querySelector('#mission');
+  const mapBack = document.querySelector('#mapBack');
+  const levelOverlay = document.querySelector('#levelOverlay');
+  const resultBadge = document.querySelector('#resultBadge');
+  const resultTitle = document.querySelector('#resultTitle');
+  const resultCopy = document.querySelector('#resultCopy');
+  const resultPrimary = document.querySelector('#resultPrimary');
+  const resultSecondary = document.querySelector('#resultSecondary');
+  const toast = document.querySelector('#toast');
+  const lifeEls = [...document.querySelectorAll('.life')];
+
+  let unlockedThrough = loadNumber('mook-worlds-unlocked', 1, 1, 40);
+  let completed = loadObject('mook-worlds-completed');
+  let currentLevel = 0;
+  let config = null;
+  let screen = 'map';
+  let playing = false;
+  let levelStarted = false;
+  let onboarding = false;
+  let onboardingType = null;
+  let startedAt = 0;
+  let score = 0;
+  let misses = 0;
+  let cycleTimer = 0;
+  let levelRaf = 0;
+  let token = 0;
+  let activeGreens = new Map();
+  let redCells = new Map();
+  let blueCells = new Map();
+  let yellowCells = new Map();
+  let rockCells = new Map();
+  let resolving = new Set();
+
+  function loadNumber(key, fallback, min, max) {
+    try { const value = Number(localStorage.getItem(key)); return Number.isFinite(value) ? Math.max(min, Math.min(max, value)) : fallback; }
+    catch (_) { return fallback; }
+  }
+  function loadObject(key) {
+    try { return JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch (_) { return {}; }
+  }
+  function persistProgress() {
+    try {
+      localStorage.setItem('mook-worlds-unlocked', String(unlockedThrough));
+      localStorage.setItem('mook-worlds-completed', JSON.stringify(completed));
+    } catch (_) {}
+  }
+  function stageFor(level) { return Math.floor((level - 1) / 10); }
+  function localLevel(level) { return ((level - 1) % 10) + 1; }
+  function getLevelConfig(level) {
+    const stageIndex = stageFor(level);
+    const step = localLevel(level);
+    const difficulty = stageIndex * 10 + step;
+    const mechanics = ['green','red'];
+    if (stageIndex >= 1) mechanics.push('blue');
+    if (stageIndex >= 2) mechanics.push('yellow');
+    if (stageIndex >= 3) mechanics.push('rock');
+    const progress = (step - 1) / 9;
+    return {
+      level, stage:stageIndex + 1, step, difficulty, mechanics, durationMs:LEVEL_DURATION_MS,
+      beatMs:Math.round(1050 - progress * 430 - stageIndex * 45),
+      targetLifetimeMs:Math.round(2100 - progress * 650 - stageIndex * 80),
+      redChance:.08 + progress * .24,
+      blueChance:stageIndex >= 1 ? .08 + progress * .22 : 0,
+      yellowChance:stageIndex >= 2 ? .07 + progress * .18 : 0,
+      rockChance:stageIndex >= 3 ? .06 + progress * .15 : 0,
+      maxGreens:step >= 8 ? 3 : step >= 4 ? 2 : 1
+    };
+  }
+
+  function renderMap() {
+    const completeCount = Object.keys(completed).filter(level => completed[level]).length;
+    worldProgress.textContent = `${completeCount} / 40`;
+    const stage = STAGES[stageFor(Math.min(unlockedThrough,40))];
+    mapTitle.textContent = unlockedThrough > 40 ? 'All worlds cleared' : `${stage.name} · Level ${unlockedThrough} awaits`;
+    mapWrap.innerHTML = '';
+    STAGES.forEach((item, stageIndex) => {
+      const card = document.createElement('section');
+      card.className = `stage-card ${item.className}`;
+      card.innerHTML = `<div class="stage-head"><div><div class="stage-number">Stage ${stageIndex + 1} · ${item.description}</div><h2 class="stage-name">${item.name}</h2></div><div class="stage-icon">${item.icon}</div></div><div class="level-path"></div><div class="stage-gate">10 levels</div>`;
+      const path = card.querySelector('.level-path');
+      for (let i = 1; i <= 10; i++) {
+        const level = stageIndex * 10 + i;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.level = String(level);
+        const isUnlocked = level <= unlockedThrough;
+        const isComplete = Boolean(completed[level]);
+        const isCurrent = level === unlockedThrough && !isComplete;
+        button.className = `level-node ${isUnlocked ? 'unlocked' : 'locked'}${isComplete ? ' complete' : ''}${isCurrent ? ' current' : ''}`;
+        button.textContent = String(i);
+        button.disabled = !isUnlocked;
+        button.setAttribute('aria-label', `${item.name}, level ${i}${isUnlocked ? '' : ', locked'}`);
+        button.addEventListener('click', () => selectLevel(level));
+        path.append(button);
+      }
+      mapWrap.append(card);
+    });
+  }
+
+  const cells = Array.from({length:8},(_,index) => {
+    const cell = document.createElement('button');
+    cell.type = 'button'; cell.className = 'cell'; cell.setAttribute('aria-label',`Cell ${index + 1}`);
+    wireGesture(cell,index); board.append(cell); return cell;
+  });
+
+  function showScreen(next) {
+    screen = next;
+    mapScreen.classList.toggle('active', next === 'map');
+    gameScreen.classList.toggle('active', next === 'game');
+  }
+  function selectLevel(level) {
+    if (level > unlockedThrough || level < 1 || level > 40) return;
+    clearRun();
+    currentLevel = level; config = getLevelConfig(level); score = 0; misses = 0;
+    playing = true; levelStarted = false; startedAt = 0; token += 1;
+    stageLabel.textContent = `Stage ${config.stage} · ${STAGES[config.stage - 1].name}`;
+    levelLabel.textContent = `Level ${config.step}`;
+    scoreEl.textContent = '0'; timeLeft.textContent = '60'; timerFill.style.transform = 'scaleX(1)';
+    lifeEls.forEach(life => life.classList.remove('lost'));
+    levelOverlay.classList.add('hidden');
+    showScreen('game');
+    onboardingType = config.step === 1 ? STAGES[config.stage - 1].mechanic : 'green';
+    onboarding = true;
+    mission.textContent = onboardingMessage(onboardingType);
+    spawnTutorial(onboardingType);
+  }
+  function onboardingMessage(type) {
+    return type === 'blue' ? 'Swipe the arrow to start'
+      : type === 'yellow' ? 'Hold for one second to start'
+      : type === 'rock' ? 'Tap three times to break it and start'
+      : 'Tap the first green to start';
+  }
+  function startClock() {
+    if (levelStarted || !playing) return;
+    onboarding = false; levelStarted = true; startedAt = performance.now();
+    mission.textContent = config.stage === 1 ? 'Tap green. Avoid red.' : `Clear Stage ${config.stage} for 60 seconds`;
+    levelRaf = requestAnimationFrame(tickLevel);
+    cycleTimer = setTimeout(nextCycle, Math.min(600, config.beatMs));
+  }
+  function tickLevel(now) {
+    if (!playing || !levelStarted) return;
+    const remaining = Math.max(0, LEVEL_DURATION_MS - (now - startedAt));
+    timerFill.style.transform = `scaleX(${remaining / LEVEL_DURATION_MS})`;
+    timerFill.style.background = remaining < 10000 ? 'var(--red)' : 'linear-gradient(90deg,#42dd7c,#58c7ef)';
+    timeLeft.textContent = String(Math.ceil(remaining / 1000));
+    if (remaining <= 0) { finishLevel(true); return; }
+    levelRaf = requestAnimationFrame(tickLevel);
+  }
+  function availableCells() {
+    return cells.map((_,i)=>i).filter(i=>!activeGreens.has(i)&&!redCells.has(i)&&!blueCells.has(i)&&!yellowCells.has(i)&&!rockCells.has(i)&&!resolving.has(i));
+  }
+  function pickCell() { const options = availableCells(); return options.length ? options[Math.floor(Math.random()*options.length)] : -1; }
+  function spawnTutorial(type) {
+    if (type === 'blue') spawnBlue(true);
+    else if (type === 'yellow') spawnYellow(true);
+    else if (type === 'rock') spawnRock(true);
+    else spawnGreen(true);
+  }
+  function spawnGreen(tutorial=false) {
+    const index = pickCell(); if (index < 0) return -1;
+    const expiry = tutorial ? 0 : setTimeout(()=>expireTarget('green',index),config.targetLifetimeMs);
+    activeGreens.set(index,{expiry,tutorial});
+    cells[index].classList.add('green');
+    if (tutorial) { cells[index].classList.add('tutorial'); cells[index].dataset.prompt='Tap to begin'; }
+    return index;
+  }
+  function spawnRed() {
+    const index = pickCell(); if(index<0)return -1;
+    const expiry=setTimeout(()=>clearTarget('red',index),Math.max(1400,config.targetLifetimeMs));
+    redCells.set(index,{expiry}); cells[index].classList.add('red'); return index;
+  }
+  function spawnBlue(tutorial=false) {
+    const index=pickCell();if(index<0)return -1;
+    const directions=['up','right','down','left'];const arrows={up:'↑',right:'→',down:'↓',left:'←'};
+    const direction=directions[Math.floor(Math.random()*4)];
+    const expiry=tutorial?0:setTimeout(()=>expireTarget('blue',index),Math.max(1500,config.targetLifetimeMs));
+    blueCells.set(index,{expiry,tutorial,direction});cells[index].classList.add('blue');cells[index].dataset.arrow=arrows[direction];
+    if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt=`Swipe ${direction}`;}return index;
+  }
+  function spawnYellow(tutorial=false) {
+    const index=pickCell();if(index<0)return -1;
+    const expiry=tutorial?0:setTimeout(()=>expireTarget('yellow',index),Math.max(2200,config.targetLifetimeMs+500));
+    yellowCells.set(index,{expiry,tutorial,holding:false,holdTimer:0});cells[index].classList.add('yellow');
+    if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt='Hold to begin';}return index;
+  }
+  function spawnRock(tutorial=false) {
+    const index=pickCell();if(index<0)return -1;
+    const expiry=tutorial?0:setTimeout(()=>expireTarget('rock',index),Math.max(3000,config.targetLifetimeMs+1300));
+    rockCells.set(index,{expiry,tutorial,hits:3});cells[index].classList.add('rock');cells[index].dataset.hits='3';
+    if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt='Tap 3 times';}return index;
+  }
+  function clearTarget(type,index) {
+    const map={green:activeGreens,red:redCells,blue:blueCells,yellow:yellowCells,rock:rockCells}[type];
+    const item=map.get(index);if(item?.expiry)clearTimeout(item.expiry);if(item?.holdTimer)clearTimeout(item.holdTimer);map.delete(index);
+    cells[index].className='cell';delete cells[index].dataset.arrow;delete cells[index].dataset.hits;delete cells[index].dataset.prompt;
+  }
+  function expireTarget(type,index) { clearTarget(type,index); loseLife(); }
+  function nextCycle() {
+    if(!playing||!levelStarted)return;
+    const greenCount=config.maxGreens===1?1:Math.random()<(.15+config.step*.055)?config.maxGreens:1;
+    for(let i=0;i<greenCount;i++)spawnGreen();
+    if(Math.random()<config.redChance)spawnRed();
+    if(config.mechanics.includes('blue')&&Math.random()<config.blueChance)spawnBlue();
+    if(config.mechanics.includes('yellow')&&yellowCells.size===0&&Math.random()<config.yellowChance)spawnYellow();
+    if(config.mechanics.includes('rock')&&rockCells.size===0&&Math.random()<config.rockChance)spawnRock();
+    cycleTimer=setTimeout(nextCycle,config.beatMs);
+  }
+  function resolveSuccess(type,index) {
+    const map={green:activeGreens,blue:blueCells,yellow:yellowCells,rock:rockCells}[type];const item=map.get(index);const wasTutorial=item?.tutorial;
+    if(item?.expiry)clearTimeout(item.expiry);if(item?.holdTimer)clearTimeout(item.holdTimer);map.delete(index);resolving.add(index);
+    cells[index].classList.add('hit');score+=1;scoreEl.textContent=String(score);showToast(wasTutorial?'GO!':'+1');
+    setTimeout(()=>{resolving.delete(index);clearCellVisual(index);},280);
+    if(wasTutorial)startClock();
+  }
+  function clearCellVisual(index){cells[index].className='cell';delete cells[index].dataset.arrow;delete cells[index].dataset.hits;delete cells[index].dataset.prompt;}
+  function tap(index) {
+    if(!playing||resolving.has(index))return;
+    if(rockCells.has(index)){hitRock(index);return;}
+    if(blueCells.has(index)){wrong(index);if(!blueCells.get(index)?.tutorial){clearTarget('blue',index);}loseLife();return;}
+    if(yellowCells.has(index)){beginHold(index);setTimeout(()=>endHold(index),0);return;}
+    if(redCells.has(index)){clearTarget('red',index);wrong(index);loseLife();return;}
+    if(activeGreens.has(index)){resolveSuccess('green',index);return;}
+    if(levelStarted){wrong(index);loseLife();}
+  }
+  function hitRock(index){const rock=rockCells.get(index);if(!rock)return;rock.hits-=1;cells[index].dataset.hits=String(rock.hits);showToast(rock.hits?`${rock.hits} left`:'Break!');if(rock.hits<=0)resolveSuccess('rock',index);}
+  function beginHold(index){const yellow=yellowCells.get(index);if(!yellow||yellow.holding)return;yellow.holding=true;cells[index].classList.add('holding');yellow.holdTimer=setTimeout(()=>resolveSuccess('yellow',index),1000);}
+  function endHold(index){const yellow=yellowCells.get(index);if(!yellow||!yellow.holding)return;clearTimeout(yellow.holdTimer);yellow.holding=false;yellow.holdTimer=0;cells[index].classList.remove('holding');}
+  function resolveSwipe(index,dx,dy){const blue=blueCells.get(index);if(!blue){tap(index);return;}const far=Math.max(Math.abs(dx),Math.abs(dy))>=SWIPE_THRESHOLD;const direction=!far?'tap':Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');if(direction===blue.direction)resolveSuccess('blue',index);else{wrong(index);if(!blue.tutorial)clearTarget('blue',index);loseLife();}}
+  function wireGesture(cell,index){let gesture=null;cell.addEventListener('pointerdown',event=>{event.preventDefault();if(yellowCells.has(index)){gesture={yellow:true};beginHold(index);}else gesture={x:event.clientX,y:event.clientY,blue:blueCells.has(index)};try{cell.setPointerCapture(event.pointerId)}catch(_){}});cell.addEventListener('pointerup',event=>{if(!gesture)return;const start=gesture;gesture=null;if(start.yellow){endHold(index);return;}const dx=event.clientX-start.x,dy=event.clientY-start.y;if(start.blue||blueCells.has(index))resolveSwipe(index,dx,dy);else tap(index);});cell.addEventListener('pointercancel',()=>{if(gesture?.yellow)endHold(index);gesture=null;});}
+  function wrong(index){cells[index].classList.remove('wrong');void cells[index].offsetWidth;cells[index].classList.add('wrong');setTimeout(()=>cells[index].classList.remove('wrong'),310);}
+  function loseLife(){if(!playing)return;misses+=1;lifeEls[misses-1]?.classList.add('lost');showToast('Life lost');if(misses>=4)finishLevel(false);}
+  function showToast(text){toast.textContent=text;toast.classList.remove('show');void toast.offsetWidth;toast.classList.add('show');}
+  function clearRun(){playing=false;clearTimeout(cycleTimer);cancelAnimationFrame(levelRaf);['green','red','blue','yellow','rock'].forEach(type=>{const map={green:activeGreens,red:redCells,blue:blueCells,yellow:yellowCells,rock:rockCells}[type];[...map.keys()].forEach(index=>clearTarget(type,index));});resolving.clear();cells.forEach((_,index)=>clearCellVisual(index));}
+  function finishLevel(success,immediateMap=false){if(!playing)return;const finishedLevel=currentLevel;clearRun();if(success){completed[finishedLevel]=Math.max(Number(completed[finishedLevel])||0,score);unlockedThrough=Math.max(unlockedThrough,Math.min(40,finishedLevel+1));persistProgress();resultBadge.textContent='✓';resultTitle.textContent='Level clear!';resultCopy.textContent=finishedLevel===40?'You cleared every Mook world.':`Level ${localLevel(Math.min(40,finishedLevel+1))} is now open.`;resultPrimary.textContent='World map';resultSecondary.textContent='Play again';}else{resultBadge.textContent='×';resultTitle.textContent='Try again';resultCopy.textContent='Four misses. Learn the rhythm and take another run.';resultPrimary.textContent='Retry level';resultSecondary.textContent='World map';}renderMap();if(immediateMap){returnToMap();return;}levelOverlay.classList.remove('hidden');resultPrimary.onclick=()=>success?returnToMap():selectLevel(finishedLevel);resultSecondary.onclick=()=>success?selectLevel(finishedLevel):returnToMap();if(success)setTimeout(()=>{if(!playing&&!levelOverlay.classList.contains('hidden'))returnToMap();},1800);}
+  function returnToMap(){clearRun();levelOverlay.classList.add('hidden');renderMap();showScreen('map');const current=document.querySelector('.level-node.current');current?.scrollIntoView({block:'center',behavior:'smooth'});}
+  function finishLevelForTest(success){finishLevel(success,true);}
+  function unlockThroughForTest(level){unlockedThrough=Math.max(1,Math.min(40,level));renderMap();}
+  function getState(){return{screen,level:currentLevel,playing,levelStarted,onboarding,onboardingType,score,misses,active:[...activeGreens.keys()],red:[...redCells.keys()],blue:[...blueCells.entries()].map(([index,item])=>({index,direction:item.direction,tutorial:item.tutorial})),yellow:[...yellowCells.keys()],rock:[...rockCells.keys()],unlockedThrough};}
+
+  mapBack.addEventListener('click',returnToMap);
+  renderMap();
+  window.__mookLevels={getLevelConfig,getState,selectLevel,tap,resolveSwipe,beginHold,endHold,hitRock,finishLevelForTest,unlockThroughForTest,returnToMap};
+</script>
+</body>
+</html>
