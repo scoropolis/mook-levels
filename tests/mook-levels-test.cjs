@@ -28,7 +28,7 @@ let browser;
   assert.ok(configs[10].mechanics.includes('blue'));
   assert.ok(configs[20].mechanics.includes('yellow'));
   assert.ok(configs[30].mechanics.includes('rock'));
-  assert.equal(configs.every(config => config.durationMs === 60000), true);
+  assert.equal(configs.every(config => config.durationMs === 30000), true);
 
   await page.click('.level-node[data-level="1"]', { force: true });
   let state = await page.evaluate(() => window.__mookLevels.getState());

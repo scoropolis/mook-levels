@@ -5,7 +5,7 @@ A separate level-based edition of Mook. The original endless score-chaser remain
 ## Structure
 
 - 4 themed stages with 10 levels each
-- 60-second levels
+- 30-second levels
 - Persistent unlock progress in the browser
 - Every stage opens with a hands-on tutorial that waits for the player
 - Difficulty rises across each set of 10 levels

@@ -107,7 +107,7 @@
       <div class="status-row">
         <div class="lives"><i class="life"></i><i class="life"></i><i class="life"></i><i class="life"></i></div>
         <div class="level-timer"><div class="level-timer-fill" id="timerFill"></div></div>
-        <div class="time-left" id="timeLeft">60</div>
+        <div class="time-left" id="timeLeft">30</div>
       </div>
       <div class="mission" id="mission">Tap the first green to start</div>
       <section class="board" id="board" aria-label="Mook game board"></section>
@@ -133,7 +133,7 @@
     { name:'Sunhold Sands', icon:'☀', className:'stage-yellow', mechanic:'yellow', description:'Press and hold' },
     { name:'Stone Summit', icon:'◆', className:'stage-rock', mechanic:'rock', description:'Break the rocks' }
   ];
-  const LEVEL_DURATION_MS = 60000;
+  const LEVEL_DURATION_MS = 30000;
   const SWIPE_THRESHOLD = 32;
   const board = document.querySelector('#board');
   const mapScreen = document.querySelector('#mapScreen');
@@ -263,7 +263,7 @@
     playing = true; levelStarted = false; startedAt = 0; token += 1;
     stageLabel.textContent = `Stage ${config.stage} · ${STAGES[config.stage - 1].name}`;
     levelLabel.textContent = `Level ${config.step}`;
-    scoreEl.textContent = '0'; timeLeft.textContent = '60'; timerFill.style.transform = 'scaleX(1)';
+    scoreEl.textContent = '0'; timeLeft.textContent = '30'; timerFill.style.transform = 'scaleX(1)';
     lifeEls.forEach(life => life.classList.remove('lost'));
     levelOverlay.classList.add('hidden');
     showScreen('game');
@@ -281,7 +281,7 @@
   function startClock() {
     if (levelStarted || !playing) return;
     onboarding = false; levelStarted = true; startedAt = performance.now();
-    mission.textContent = config.stage === 1 ? 'Tap green. Avoid red.' : `Clear Stage ${config.stage} for 60 seconds`;
+    mission.textContent = config.stage === 1 ? 'Tap green. Avoid red.' : `Clear Stage ${config.stage} for 30 seconds`;
     levelRaf = requestAnimationFrame(tickLevel);
     cycleTimer = setTimeout(nextCycle, Math.min(600, config.beatMs));
   }
