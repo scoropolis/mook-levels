@@ -9,7 +9,7 @@
   <style>
     :root {
       --ink:#172838; --paper:#fff8e9; --green:#40da78; --red:#ff646c;
-      --blue:#55bdf6; --yellow:#ffd24f; --rock:#71818b; --navy:#172838;
+      --blue:#55bdf6; --yellow:#ffd24f; --rock:#71818b; --purple:#a65cf1; --navy:#172838;
     }
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;min-height:100%;background:#65d6c5;color:var(--ink);font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif}
@@ -37,6 +37,7 @@
     .stage-blue{background:linear-gradient(155deg,#d8f4ff,#78c9fa)}
     .stage-yellow{background:linear-gradient(155deg,#fff4b3,#ffc95d)}
     .stage-rock{background:linear-gradient(155deg,#dce7ec,#82949e)}
+    .stage-purple{background:linear-gradient(155deg,#f1dcff,#ad70ef)}
     .stage-card:after{content:"";position:absolute;width:190px;height:190px;border-radius:50%;right:-80px;bottom:-100px;background:rgba(255,255,255,.2)}
     .stage-head{position:relative;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;margin:0 6px 20px}
     .stage-number{font-size:10px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;opacity:.55}
@@ -71,6 +72,7 @@
     .cell.yellow{background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.42),transparent 30%),var(--yellow);border-color:#fff0a8;box-shadow:0 5px 0 #d49a19;color:#5b4300}
     .cell.yellow.tutorial:before{content:"HOLD";position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(20px,7vw,34px);letter-spacing:.06em}.cell.yellow.holding{animation:hold 1s linear forwards}
     .cell.rock{background:radial-gradient(circle at 34% 26%,rgba(255,255,255,.28),transparent 22%),linear-gradient(145deg,#9aa9b0,#55636b);border-color:#c7d1d5;box-shadow:0 5px 0 #46535a}.cell.rock:before{content:attr(data-hits);position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(48px,18vw,82px);text-shadow:0 3px 0 rgba(0,0,0,.25)}
+    .cell.purple{background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.42),transparent 30%),var(--purple);border-color:#dbb6ff;box-shadow:0 5px 0 #7133b2}
     .cell.tutorial:after{content:attr(data-prompt);position:absolute;left:8px;right:8px;bottom:12px;text-align:center;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
     .cell.hit{animation:hit .28s ease-out}.cell.wrong{animation:wrong .3s linear}
     .level-overlay{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:28px;background:rgba(23,40,56,.82);backdrop-filter:blur(10px)}.level-overlay.hidden{display:none}
@@ -90,7 +92,7 @@
 <main class="app">
   <section class="screen map-screen active" id="mapScreen">
     <header class="map-hero">
-      <div class="hero-row"><span class="eyebrow">Level journey</span><span class="world-progress" id="worldProgress">0 / 40</span></div>
+      <div class="hero-row"><span class="eyebrow">Level journey</span><span class="world-progress" id="worldProgress">0 / 50</span></div>
       <div class="map-logo">Mook<span>Worlds</span></div>
       <div class="map-title" id="mapTitle">Green Valley · Level 1 awaits</div>
     </header>
@@ -131,7 +133,8 @@
     { name:'Green Valley', icon:'●', className:'stage-green', mechanic:'green', description:'Tap & dodge' },
     { name:'Sky Current', icon:'↗', className:'stage-blue', mechanic:'blue', description:'Swipe the arrows' },
     { name:'Sunhold Sands', icon:'☀', className:'stage-yellow', mechanic:'yellow', description:'Press and hold' },
-    { name:'Stone Summit', icon:'◆', className:'stage-rock', mechanic:'rock', description:'Break the rocks' }
+    { name:'Stone Summit', icon:'◆', className:'stage-rock', mechanic:'rock', description:'Break the rocks' },
+    { name:'Violet Rush', icon:'✦', className:'stage-purple', mechanic:'purple', description:'One-second reactions' }
   ];
   const LEVEL_DURATION_MS = 30000;
   const SWIPE_THRESHOLD = 32;
@@ -142,6 +145,7 @@
   const BLUE_LIFETIME_MS = 2000;
   const YELLOW_LIFETIME_MS = 3000;
   const ROCK_LIFETIME_MS = 4000;
+  const PURPLE_LIFETIME_MS = 1000;
   const board = document.querySelector('#board');
   const mapScreen = document.querySelector('#mapScreen');
   const gameScreen = document.querySelector('#gameScreen');
@@ -164,7 +168,7 @@
   const toast = document.querySelector('#toast');
   const lifeEls = [...document.querySelectorAll('.life')];
 
-  let unlockedThrough = loadNumber('mook-worlds-unlocked', 1, 1, 40);
+  let unlockedThrough = loadNumber('mook-worlds-unlocked', 1, 1, 50);
   let completed = loadObject('mook-worlds-completed');
   let currentLevel = 0;
   let config = null;
@@ -184,6 +188,7 @@
   let blueCells = new Map();
   let yellowCells = new Map();
   let rockCells = new Map();
+  let purpleCells = new Map();
   let resolving = new Set();
   let graceCells = new Map();
 
@@ -210,6 +215,7 @@
     if (stageIndex >= 1) mechanics.push('blue');
     if (stageIndex >= 2) mechanics.push('yellow');
     if (stageIndex >= 3) mechanics.push('rock');
+    if (stageIndex >= 4) mechanics.push('purple');
     const progress = (step - 1) / 9;
     const openingType = STAGES[stageIndex].mechanic;
     const rockMinHits = stageIndex < 3 || step < 5 ? 3 : 2;
@@ -222,19 +228,21 @@
       blueLifetimeMs:BLUE_LIFETIME_MS,
       yellowLifetimeMs:YELLOW_LIFETIME_MS,
       rockLifetimeMs:ROCK_LIFETIME_MS,
+      purpleLifetimeMs:PURPLE_LIFETIME_MS,
       redChance:.08 + progress * .24,
       blueChance:stageIndex >= 1 ? .08 + progress * .22 : 0,
       yellowChance:stageIndex >= 2 ? .07 + progress * .18 : 0,
       rockChance:stageIndex >= 3 ? .06 + progress * .15 : 0,
+      purpleChance:stageIndex >= 4 ? .08 + progress * .22 : 0,
       maxGreens:step >= 8 ? 3 : step >= 4 ? 2 : 1
     };
   }
 
   function renderMap() {
     const completeCount = Object.keys(completed).filter(level => completed[level]).length;
-    worldProgress.textContent = `${completeCount} / 40`;
-    const stage = STAGES[stageFor(Math.min(unlockedThrough,40))];
-    mapTitle.textContent = unlockedThrough > 40 ? 'All worlds cleared' : `${stage.name} · Level ${unlockedThrough} awaits`;
+    worldProgress.textContent = `${completeCount} / 50`;
+    const stage = STAGES[stageFor(Math.min(unlockedThrough,50))];
+    mapTitle.textContent = completeCount >= 50 ? 'All worlds cleared' : `${stage.name} · Level ${unlockedThrough} awaits`;
     mapWrap.innerHTML = '';
     STAGES.forEach((item, stageIndex) => {
       const card = document.createElement('section');
@@ -272,7 +280,7 @@
     gameScreen.classList.toggle('active', next === 'game');
   }
   function selectLevel(level) {
-    if (level > unlockedThrough || level < 1 || level > 40) return;
+    if (level > unlockedThrough || level < 1 || level > 50) return;
     clearRun();
     currentLevel = level; config = getLevelConfig(level); score = 0; misses = 0;
     playing = true; levelStarted = false; startedAt = 0; token += 1;
@@ -291,6 +299,7 @@
     return type === 'blue' ? 'Swipe the arrow to start'
       : type === 'yellow' ? 'Hold for one second to start'
       : type === 'rock' ? 'Tap three times to break it and start'
+      : type === 'purple' ? 'Tap the purple cell to start'
       : 'Tap the first green to start';
   }
   function startClock() {
@@ -310,9 +319,9 @@
     levelRaf = requestAnimationFrame(tickLevel);
   }
   function availableCells() {
-    return cells.map((_,i)=>i).filter(i=>!activeGreens.has(i)&&!redCells.has(i)&&!blueCells.has(i)&&!yellowCells.has(i)&&!rockCells.has(i)&&!resolving.has(i));
+    return cells.map((_,i)=>i).filter(i=>!activeGreens.has(i)&&!redCells.has(i)&&!blueCells.has(i)&&!yellowCells.has(i)&&!rockCells.has(i)&&!purpleCells.has(i)&&!resolving.has(i));
   }
-  function activeTargetCount() { return activeGreens.size+redCells.size+blueCells.size+yellowCells.size+rockCells.size+resolving.size; }
+  function activeTargetCount() { return activeGreens.size+redCells.size+blueCells.size+yellowCells.size+rockCells.size+purpleCells.size+resolving.size; }
   function pickCell() {
     if(activeTargetCount()>=MAX_ACTIVE_TARGETS)return -1;
     const options = availableCells(); return options.length ? options[Math.floor(Math.random()*options.length)] : -1;
@@ -321,6 +330,7 @@
     if (type === 'blue') spawnBlue(true);
     else if (type === 'yellow') spawnYellow(true);
     else if (type === 'rock') spawnRock(true);
+    else if (type === 'purple') spawnPurple(true);
     else spawnGreen(true);
   }
   function spawnGreen(tutorial=false) {
@@ -358,13 +368,19 @@
     rockCells.set(index,{expiry,tutorial,hits});cells[index].classList.add('rock');cells[index].dataset.hits=String(hits);
     if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt='Tap 3 times';}return index;
   }
+  function spawnPurple(tutorial=false) {
+    const index=pickCell();if(index<0)return -1;
+    const expiry=tutorial?0:setTimeout(()=>expireTarget('purple',index),config.purpleLifetimeMs);
+    purpleCells.set(index,{expiry,tutorial});cells[index].classList.add('purple');
+    if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt='Tap to begin';}return index;
+  }
   function clearTarget(type,index) {
-    const map={green:activeGreens,red:redCells,blue:blueCells,yellow:yellowCells,rock:rockCells}[type];
+    const map={green:activeGreens,red:redCells,blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];
     const item=map.get(index);if(item?.expiry)clearTimeout(item.expiry);if(item?.holdTimer)clearTimeout(item.holdTimer);map.delete(index);
     cells[index].className='cell';delete cells[index].dataset.arrow;delete cells[index].dataset.hits;delete cells[index].dataset.prompt;
   }
   function expireTarget(type,index) {
-    const map={green:activeGreens,blue:blueCells,yellow:yellowCells,rock:rockCells}[type];
+    const map={green:activeGreens,blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];
     if(!map?.has(index))return;
     graceCells.set(index,performance.now()+300);
     clearTarget(type,index);loseLife();
@@ -377,10 +393,11 @@
     if(config.mechanics.includes('blue')&&Math.random()<config.blueChance)spawnBlue();
     if(config.mechanics.includes('yellow')&&yellowCells.size===0&&Math.random()<config.yellowChance)spawnYellow();
     if(config.mechanics.includes('rock')&&rockCells.size===0&&Math.random()<config.rockChance)spawnRock();
+    if(config.mechanics.includes('purple')&&purpleCells.size===0&&Math.random()<config.purpleChance)spawnPurple();
     cycleTimer=setTimeout(nextCycle,config.beatMs);
   }
   function resolveSuccess(type,index) {
-    const map={green:activeGreens,blue:blueCells,yellow:yellowCells,rock:rockCells}[type];const item=map.get(index);const wasTutorial=item?.tutorial;
+    const map={green:activeGreens,blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];const item=map.get(index);const wasTutorial=item?.tutorial;
     if(item?.expiry)clearTimeout(item.expiry);if(item?.holdTimer)clearTimeout(item.holdTimer);map.delete(index);resolving.add(index);
     cells[index].classList.add('hit');score+=1;scoreEl.textContent=String(score);showToast(wasTutorial?'GO!':'+1');
     setTimeout(()=>{resolving.delete(index);clearCellVisual(index);},280);
@@ -393,6 +410,7 @@
     if(blueCells.has(index)){wrong(index);if(!blueCells.get(index)?.tutorial){clearTarget('blue',index);}loseLife();return;}
     if(yellowCells.has(index)){beginHold(index);setTimeout(()=>endHold(index),0);return;}
     if(redCells.has(index)){clearTarget('red',index);wrong(index);loseLife();return;}
+    if(purpleCells.has(index)){resolveSuccess('purple',index);return;}
     if(activeGreens.has(index)){resolveSuccess('green',index);return;}
     const graceUntil=graceCells.get(index)||0;
     if(graceUntil>=performance.now())return;
@@ -407,15 +425,15 @@
   function wrong(index){cells[index].classList.remove('wrong');void cells[index].offsetWidth;cells[index].classList.add('wrong');setTimeout(()=>cells[index].classList.remove('wrong'),310);}
   function loseLife(){if(!playing)return;misses+=1;lifeEls[misses-1]?.classList.add('lost');showToast('Life lost');if(misses>=4)finishLevel(false);}
   function showToast(text){toast.textContent=text;toast.classList.remove('show');void toast.offsetWidth;toast.classList.add('show');}
-  function clearTargets(){['green','red','blue','yellow','rock'].forEach(type=>{const map={green:activeGreens,red:redCells,blue:blueCells,yellow:yellowCells,rock:rockCells}[type];[...map.keys()].forEach(index=>clearTarget(type,index));});resolving.clear();cells.forEach((_,index)=>clearCellVisual(index));}
+  function clearTargets(){['green','red','blue','yellow','rock','purple'].forEach(type=>{const map={green:activeGreens,red:redCells,blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];[...map.keys()].forEach(index=>clearTarget(type,index));});resolving.clear();cells.forEach((_,index)=>clearCellVisual(index));}
   function clearRun(){playing=false;clearTimeout(cycleTimer);cancelAnimationFrame(levelRaf);clearTargets();graceCells.clear();}
-  function finishLevel(success,immediateMap=false){if(!playing)return;const finishedLevel=currentLevel;clearRun();if(success){completed[finishedLevel]=Math.max(Number(completed[finishedLevel])||0,score);unlockedThrough=Math.max(unlockedThrough,Math.min(40,finishedLevel+1));persistProgress();resultBadge.textContent='✓';resultTitle.textContent='Level clear!';resultCopy.textContent=finishedLevel===40?'You cleared every Mook world.':`Level ${localLevel(Math.min(40,finishedLevel+1))} is now open.`;resultPrimary.textContent='World map';resultSecondary.textContent='Play again';}else{resultBadge.textContent='×';resultTitle.textContent='Try again';resultCopy.textContent='Four misses. Learn the rhythm and take another run.';resultPrimary.textContent='Retry level';resultSecondary.textContent='World map';}renderMap();if(immediateMap){returnToMap();return;}levelOverlay.classList.remove('hidden');resultPrimary.onclick=()=>success?returnToMap():selectLevel(finishedLevel);resultSecondary.onclick=()=>success?selectLevel(finishedLevel):returnToMap();if(success)setTimeout(()=>{if(!playing&&!levelOverlay.classList.contains('hidden'))returnToMap();},1800);}
+  function finishLevel(success,immediateMap=false){if(!playing)return;const finishedLevel=currentLevel;clearRun();if(success){completed[finishedLevel]=Math.max(Number(completed[finishedLevel])||0,score);unlockedThrough=Math.max(unlockedThrough,Math.min(50,finishedLevel+1));persistProgress();resultBadge.textContent='✓';resultTitle.textContent='Level clear!';resultCopy.textContent=finishedLevel===50?'You cleared every Mook world.':`Level ${localLevel(Math.min(50,finishedLevel+1))} is now open.`;resultPrimary.textContent='World map';resultSecondary.textContent='Play again';}else{resultBadge.textContent='×';resultTitle.textContent='Try again';resultCopy.textContent='Four misses. Learn the rhythm and take another run.';resultPrimary.textContent='Retry level';resultSecondary.textContent='World map';}renderMap();if(immediateMap){returnToMap();return;}levelOverlay.classList.remove('hidden');resultPrimary.onclick=()=>success?returnToMap():selectLevel(finishedLevel);resultSecondary.onclick=()=>success?selectLevel(finishedLevel):returnToMap();if(success)setTimeout(()=>{if(!playing&&!levelOverlay.classList.contains('hidden'))returnToMap();},1800);}
   function returnToMap(){clearRun();levelOverlay.classList.add('hidden');renderMap();showScreen('map');const current=document.querySelector('.level-node.current');current?.scrollIntoView({block:'center',behavior:'smooth'});}
   function finishLevelForTest(success){finishLevel(success,true);}
-  function unlockThroughForTest(level){unlockedThrough=Math.max(1,Math.min(40,level));renderMap();}
-  function spawnForTest(type){return({green:spawnGreen,red:spawnRed,blue:spawnBlue,yellow:spawnYellow,rock:spawnRock}[type]||(()=>-1))();}
+  function unlockThroughForTest(level){unlockedThrough=Math.max(1,Math.min(50,level));renderMap();}
+  function spawnForTest(type){return({green:spawnGreen,red:spawnRed,blue:spawnBlue,yellow:spawnYellow,rock:spawnRock,purple:spawnPurple}[type]||(()=>-1))();}
   function clearTargetsForTest(){clearTargets();graceCells.clear();}
-  function getState(){return{screen,level:currentLevel,playing,levelStarted,onboarding,onboardingType,score,misses,active:[...activeGreens.keys()],red:[...redCells.keys()],blue:[...blueCells.entries()].map(([index,item])=>({index,direction:item.direction,tutorial:item.tutorial})),yellow:[...yellowCells.keys()],rock:[...rockCells.entries()].map(([index,item])=>({index,hits:item.hits,tutorial:item.tutorial})),unlockedThrough};}
+  function getState(){return{screen,level:currentLevel,playing,levelStarted,onboarding,onboardingType,score,misses,active:[...activeGreens.keys()],red:[...redCells.keys()],blue:[...blueCells.entries()].map(([index,item])=>({index,direction:item.direction,tutorial:item.tutorial})),yellow:[...yellowCells.keys()],rock:[...rockCells.entries()].map(([index,item])=>({index,hits:item.hits,tutorial:item.tutorial})),purple:[...purpleCells.keys()],unlockedThrough};}
 
   mapBack.addEventListener('click',returnToMap);
   renderMap();

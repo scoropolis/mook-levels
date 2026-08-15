@@ -4,7 +4,7 @@ A separate level-based edition of Mook. The original endless score-chaser remain
 
 ## Structure
 
-- 4 themed stages with 10 levels each
+- 5 themed stages with 10 levels each
 - 30-second levels
 - Persistent unlock progress in the browser
 - Every stage opens with a hands-on tutorial that waits for the player
@@ -19,6 +19,7 @@ A separate level-based edition of Mook. The original endless score-chaser remain
 - Stage 3: adds yellow hold targets
 - Stage 4: adds three-hit rocks
 - Stage 4 Levels 5–9 vary regular rocks from two to four hits; Level 10 can also produce five-hit rocks
+- Stage 5: adds one-second purple tap cells; every level waits on a purple opener before its timer starts
 
 ## Run locally
 
