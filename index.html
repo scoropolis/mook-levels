@@ -51,6 +51,7 @@
     .level-node:nth-child(n+6){grid-row:2}.level-node:nth-child(6){grid-column:5}.level-node:nth-child(7){grid-column:4}.level-node:nth-child(8){grid-column:3}.level-node:nth-child(9){grid-column:2}.level-node:nth-child(10){grid-column:1}
     .level-node.unlocked{cursor:pointer;color:var(--ink);background:#fff;border-color:#fff;box-shadow:0 5px 0 rgba(23,40,56,.18),0 8px 18px rgba(23,40,56,.12)}
     .level-node.complete{color:white;background:var(--navy);border-color:var(--navy)}
+    .level-number{display:block;line-height:1}.level-stars{position:absolute;left:50%;bottom:5px;transform:translateX(-50%);white-space:nowrap;color:#ffd24f;font-size:7px;line-height:1;letter-spacing:-1px;text-shadow:0 1px 0 rgba(0,0,0,.25)}
     .level-node.current{animation:pulse 1.8s ease-in-out infinite;outline:5px solid rgba(255,255,255,.42)}
     .level-node.locked:after{content:"•";position:absolute;right:-1px;bottom:-3px;width:17px;height:17px;display:grid;place-items:center;border-radius:50%;color:white;background:#71818b;font-size:11px}
     .stage-gate{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);padding:5px 14px;border-radius:12px 12px 0 0;background:rgba(23,40,56,.76);color:white;font-size:9px;font-weight:950;letter-spacing:.12em;text-transform:uppercase}
@@ -75,12 +76,19 @@
     .cell.yellow.tutorial:before{content:"HOLD";position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(20px,7vw,34px);letter-spacing:.06em}.cell.yellow.holding{animation:hold 1s linear forwards}
     .cell.rock{background:radial-gradient(circle at 34% 26%,rgba(255,255,255,.28),transparent 22%),linear-gradient(145deg,#9aa9b0,#55636b);border-color:#c7d1d5;box-shadow:0 5px 0 #46535a}.cell.rock:before{content:attr(data-hits);position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(48px,18vw,82px);text-shadow:0 3px 0 rgba(0,0,0,.25)}
     .cell.purple{background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.42),transparent 30%),var(--purple);border-color:#dbb6ff;box-shadow:0 5px 0 #7133b2}
-    .cell.purple.fading{animation:purpleFade 1s linear forwards}
+    .cell.purple.fading{animation:purpleFade var(--purple-duration,1s) linear forwards}
     .cell.tutorial:after{content:attr(data-prompt);position:absolute;left:8px;right:8px;bottom:12px;text-align:center;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
     .cell.hit{animation:hit .28s ease-out}.cell.wrong{animation:wrong .3s linear}
+    .level-intro{position:absolute;inset:0;z-index:7;display:grid;place-items:center;padding:18px;background:rgba(23,40,56,.84);backdrop-filter:blur(12px);overflow-y:auto}.level-intro.hidden{display:none}
+    .intro-card{width:min(100%,380px);margin:auto;padding:24px 20px 20px;border-radius:28px;background:#fff;text-align:center;box-shadow:rgba(0,0,0,.02) 0 0 0 1px,rgba(0,0,0,.08) 0 8px 24px,rgba(0,0,0,.18) 0 18px 42px}
+    .intro-kicker,.result-kicker{font-size:10px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#71818b}.intro-card h2{margin:6px 0 8px;font-size:30px;letter-spacing:-.05em}.intro-summary{margin:0 auto 18px;max-width:300px;color:#62747e;font-size:13px;line-height:1.45}
+    .power-heading{display:flex;align-items:center;justify-content:space-between;margin:0 2px 9px;text-align:left}.power-heading b{font-size:13px}.power-heading span{font-size:9px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;color:#768892}
+    .god-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.power-card{min-width:0;min-height:112px;padding:10px 6px;border:2px solid #e4ebe8;border-radius:17px;background:#f8fbfa;color:var(--ink);box-shadow:0 3px 0 #dfe7e3;cursor:pointer}.power-card:before{content:attr(data-icon);display:grid;place-items:center;width:31px;height:31px;margin:0 auto 6px;border-radius:11px;background:#e8f6ff;font-size:18px}.power-card b,.power-card span,.power-card small{display:block}.power-card b{font-size:12px}.power-card span{min-height:29px;margin:3px 0;color:#6b7d86;font-size:8px;line-height:1.25}.power-card small{color:#1d9a69;font-size:8px;font-weight:1000;text-transform:uppercase}.power-card[aria-pressed="true"]{border-color:#55bdf6;background:#eaf8ff;box-shadow:0 3px 0 #2797d2,0 0 0 3px rgba(85,189,246,.16);transform:translateY(-1px)}
+    .power-card.time-power{width:100%;min-height:70px;margin-top:9px;padding:9px 13px;display:grid;grid-template-columns:38px 1fr auto;column-gap:9px;align-items:center;text-align:left}.power-card.time-power:before{grid-row:1/4;grid-column:1;width:38px;height:38px;margin:0}.power-card.time-power b,.power-card.time-power span,.power-card.time-power small{grid-column:2}.power-card.time-power span{min-height:0;margin:1px 0}.power-card.time-power small{grid-column:3;grid-row:1/4}
+    .intro-start{width:100%;min-height:52px;margin-top:15px;border:0;border-radius:15px;color:white;background:var(--navy);font-weight:1000;box-shadow:0 5px 0 #09141e}.intro-start:active{transform:translateY(3px);box-shadow:0 2px 0 #09141e}
     .level-overlay{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:28px;background:rgba(23,40,56,.82);backdrop-filter:blur(10px)}.level-overlay.hidden{display:none}
-    .result-card{width:min(100%,340px);padding:28px;border:3px solid rgba(23,40,56,.14);border-radius:28px;background:var(--paper);text-align:center;box-shadow:0 12px 0 rgba(0,0,0,.18)}
-    .result-badge{width:76px;height:76px;margin:auto;display:grid;place-items:center;border-radius:24px;background:#55d98a;font-size:36px;font-weight:1000;transform:rotate(-4deg)}.result-card h2{margin:18px 0 8px;font-size:38px;letter-spacing:-.06em}.result-card p{margin:0 0 22px;color:#687982}.result-actions{display:grid;gap:9px}.result-actions button{min-height:50px;border:0;border-radius:15px;font-weight:950}.result-primary{color:white;background:var(--navy)}.result-secondary{color:var(--ink);background:#e8eeeb}
+    .result-card{position:relative;width:min(100%,350px);padding:25px 24px 24px;border:3px solid rgba(23,40,56,.12);border-radius:30px;background:var(--paper);text-align:center;box-shadow:rgba(0,0,0,.02) 0 0 0 1px,rgba(0,0,0,.08) 0 8px 24px,rgba(0,0,0,.22) 0 18px 42px;overflow:hidden}.result-card.celebrate:before{content:"✦  ·  ✦  ·  ✦";position:absolute;inset:15px 0 auto;color:#ffd24f;font-size:15px;letter-spacing:.5em;animation:sparkle 1.2s ease-in-out infinite}
+    .result-badge{position:relative;width:68px;height:68px;margin:8px auto 14px;display:grid;place-items:center;border-radius:22px;background:#55d98a;font-size:34px;font-weight:1000;transform:rotate(-4deg);animation:awardBounce .65s cubic-bezier(.2,.9,.25,1.25)}.result-card h2{margin:5px 0 12px;font-size:34px;letter-spacing:-.055em}.result-score-wrap{margin:0 auto 9px}.result-score-label{display:block;color:#71818b;font-size:9px;font-weight:1000;letter-spacing:.14em;text-transform:uppercase}.result-score{display:block;font-size:48px;line-height:1;font-weight:1000;font-variant-numeric:tabular-nums;letter-spacing:-.07em}.result-stars{height:52px;display:flex;align-items:center;justify-content:center;gap:5px}.award-star{display:inline-block;color:#dbe1df;font-size:38px;line-height:1;transform:scale(.25) translateY(18px);opacity:.25}.award-star.earned{color:#ffd24f;text-shadow:0 3px 0 #d39217;animation:starLand .55s cubic-bezier(.2,.9,.2,1.4) both}.result-card p{margin:3px 0 20px;color:#687982;font-size:13px}.result-actions{display:grid;gap:9px}.result-actions button{min-height:50px;border:0;border-radius:15px;font-weight:950}.result-primary{color:white;background:var(--navy)}.result-secondary{color:var(--ink);background:#e8eeeb}
     .toast{position:absolute;z-index:4;left:50%;top:22%;transform:translate(-50%,-20px);padding:10px 16px;border-radius:99px;color:white;background:var(--navy);font-size:12px;font-weight:950;opacity:0;pointer-events:none}.toast.show{animation:toast .9s ease both}
     @keyframes pulse{50%{transform:scale(1.1);box-shadow:0 7px 0 rgba(23,40,56,.18),0 0 0 8px rgba(255,255,255,.25)}}
     @keyframes hit{50%{transform:scale(1.08);filter:brightness(1.25)}to{opacity:.3;transform:scale(.7)}}
@@ -88,8 +96,11 @@
     @keyframes hold{to{transform:scale(.28);border-radius:50%;filter:brightness(1.2)}}
     @keyframes purpleFade{from{opacity:1}to{opacity:.03}}
     @keyframes toast{20%,75%{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-12px)}}
+    @keyframes awardBounce{0%{opacity:0;transform:translateY(-24px) scale(.5) rotate(-12deg)}to{opacity:1;transform:translateY(0) scale(1) rotate(-4deg)}}
+    @keyframes starLand{0%{opacity:0;transform:scale(.2) translateY(-28px) rotate(-20deg)}70%{opacity:1;transform:scale(1.18) translateY(0) rotate(6deg)}to{opacity:1;transform:scale(1) translateY(0) rotate(0)}}
+    @keyframes sparkle{50%{opacity:.35;transform:scale(.94)}}
     @media(max-height:650px){.game-top{padding-top:8px}.mission{margin-bottom:6px}.board{gap:6px}.cell{border-radius:17px}}
-    @media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}.cell.purple.fading{animation:purpleFade 1s linear forwards!important}}
+    @media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}.cell.purple.fading{animation:purpleFade var(--purple-duration,1s) linear forwards!important}}
   </style>
 </head>
 <body>
@@ -118,10 +129,25 @@
       <div class="mission" id="mission">Tap the first green to start</div>
       <section class="board" id="board" aria-label="Mook game board"></section>
       <div class="toast" id="toast">Nice!</div>
+      <section class="level-intro hidden" id="levelIntro">
+        <div class="intro-card">
+          <div class="intro-kicker">Level briefing</div><h2 id="introTitle">Green Valley · Level 1</h2><p class="intro-summary" id="introSummary">Survive 30 game seconds.</p>
+          <div class="power-heading"><b>Equip your Gods</b><span>Unlimited testing</span></div>
+          <div class="god-grid">
+            <button class="power-card" data-power="sky" data-icon="☁" aria-pressed="false"><b>Sky God</b><span>Auto-clears every blue swipe</span><small>Unlimited</small></button>
+            <button class="power-card" data-power="sun" data-icon="☀" aria-pressed="false"><b>Sun God</b><span>Auto-completes every yellow hold</span><small>Unlimited</small></button>
+            <button class="power-card" data-power="rock" data-icon="◆" aria-pressed="false"><b>Rock God</b><span>Auto-breaks every gray rock</span><small>Unlimited</small></button>
+          </div>
+          <button class="power-card time-power" data-power="time" data-icon="◷" aria-pressed="false"><b>Time Slow</b><span>Slows game time by 25%</span><small>Unlimited</small></button>
+          <button class="intro-start" id="introStart">Start level</button>
+        </div>
+      </section>
       <section class="level-overlay hidden" id="levelOverlay">
-        <div class="result-card">
-          <div class="result-badge" id="resultBadge">✓</div>
+        <div class="result-card" id="resultCard">
+          <div class="result-kicker" id="resultLevel">Green Valley · Level 1</div><div class="result-badge" id="resultBadge">★</div>
           <h2 id="resultTitle">Level clear!</h2>
+          <div class="result-score-wrap"><span class="result-score-label">Points</span><b class="result-score" id="resultScore">0</b></div>
+          <div class="result-stars" id="resultStars"><i class="award-star">★</i><i class="award-star">★</i><i class="award-star">★</i><i class="award-star">★</i></div>
           <p id="resultCopy">The next level is open.</p>
           <div class="result-actions">
             <button class="result-primary" id="resultPrimary">World map</button>
@@ -137,7 +163,7 @@
     { name:'Green Valley', icon:'●', className:'stage-green', mechanic:'green', description:'Tap & dodge' },
     { name:'Sky Current', icon:'↗', className:'stage-blue', mechanic:'blue', description:'Swipe the arrows' },
     { name:'Sunhold Sands', icon:'☀', className:'stage-yellow', mechanic:'yellow', description:'Press and hold' },
-    { name:'Stone Summit', icon:'◆', className:'stage-rock', mechanic:'rock', description:'Break the rocks' },
+    { name:'Rock Summit', icon:'◆', className:'stage-rock', mechanic:'rock', description:'Break the rocks' },
     { name:'Violet Rush', icon:'✦', className:'stage-purple', mechanic:'purple', description:'One-second reactions' },
     { name:'Reverse Realm', icon:'⇄', className:'stage-opposite', mechanic:'opposite', description:'Everything means the opposite' },
     { name:'Quantum Flux', icon:'?', className:'stage-quantum', mechanic:'quantum', description:'Rules change mid-cell' }
@@ -169,8 +195,17 @@
   const mission = document.querySelector('#mission');
   const mapBack = document.querySelector('#mapBack');
   const levelOverlay = document.querySelector('#levelOverlay');
+  const levelIntro = document.querySelector('#levelIntro');
+  const introTitle = document.querySelector('#introTitle');
+  const introSummary = document.querySelector('#introSummary');
+  const introStart = document.querySelector('#introStart');
+  const powerCards = [...document.querySelectorAll('.power-card')];
+  const resultCard = document.querySelector('#resultCard');
+  const resultLevel = document.querySelector('#resultLevel');
   const resultBadge = document.querySelector('#resultBadge');
   const resultTitle = document.querySelector('#resultTitle');
+  const resultScore = document.querySelector('#resultScore');
+  const awardStars = [...document.querySelectorAll('.award-star')];
   const resultCopy = document.querySelector('#resultCopy');
   const resultPrimary = document.querySelector('#resultPrimary');
   const resultSecondary = document.querySelector('#resultSecondary');
@@ -179,6 +214,7 @@
 
   let unlockedThrough = loadNumber('mook-worlds-unlocked', 1, 1, 70);
   let completed = loadObject('mook-worlds-completed');
+  let starScores = loadObject('mook-worlds-stars');
   if(Object.prototype.hasOwnProperty.call(completed,'50')&&unlockedThrough<51)unlockedThrough=51;
   let currentLevel = 0;
   let config = null;
@@ -187,11 +223,16 @@
   let levelStarted = false;
   let onboarding = false;
   let onboardingType = null;
+  let introVisible = false;
+  let equippedPowers = new Set();
+  let runTimeScale = 1;
   let startedAt = 0;
   let score = 0;
   let misses = 0;
   let cycleTimer = 0;
   let levelRaf = 0;
+  let resultRaf = 0;
+  let awardTimers = [];
   let token = 0;
   let worldCellAccumulator = 0;
   let modePoolCursor = 0;
@@ -216,10 +257,13 @@
     try {
       localStorage.setItem('mook-worlds-unlocked', String(unlockedThrough));
       localStorage.setItem('mook-worlds-completed', JSON.stringify(completed));
+      localStorage.setItem('mook-worlds-stars', JSON.stringify(starScores));
     } catch (_) {}
   }
   function stageFor(level) { return Math.floor((level - 1) / 10); }
   function localLevel(level) { return ((level - 1) % 10) + 1; }
+  function starsForMisses(value){return Math.max(0,4-Math.max(0,Math.floor(value)));}
+  function scaledDelay(value){return value/runTimeScale;}
   function getLevelConfig(level) {
     const stageIndex = stageFor(level);
     const step = localLevel(level);
@@ -266,7 +310,7 @@
   }
 
   function renderMap() {
-    const completeCount = Object.keys(completed).filter(level => completed[level]).length;
+    const completeCount = Object.keys(completed).filter(level => Number(level)>=1&&Number(level)<=70).length;
     worldProgress.textContent = `${completeCount} / 70`;
     const stage = STAGES[stageFor(Math.min(unlockedThrough,70))];
     mapTitle.textContent = completeCount >= 70 ? 'All worlds cleared' : `${stage.name} · Level ${unlockedThrough} awaits`;
@@ -282,12 +326,13 @@
         button.type = 'button';
         button.dataset.level = String(level);
         const isUnlocked = level <= unlockedThrough;
-        const isComplete = Boolean(completed[level]);
+        const isComplete = Object.prototype.hasOwnProperty.call(completed,String(level));
+        const bestStars = Math.max(0,Math.min(4,Number(starScores[level])||0));
         const isCurrent = level === unlockedThrough && !isComplete;
         button.className = `level-node ${isUnlocked ? 'unlocked' : 'locked'}${isComplete ? ' complete' : ''}${isCurrent ? ' current' : ''}`;
-        button.textContent = String(i);
+        button.innerHTML = `<span class="level-number">${i}</span><span class="level-stars">${'★'.repeat(bestStars)}</span>`;
         button.disabled = !isUnlocked;
-        button.setAttribute('aria-label', `${item.name}, level ${i}${isUnlocked ? '' : ', locked'}`);
+        button.setAttribute('aria-label', `${item.name}, level ${i}${bestStars?`, ${bestStars} stars`:''}${isUnlocked ? '' : ', locked'}`);
         button.addEventListener('click', () => selectLevel(level));
         path.append(button);
       }
@@ -310,18 +355,22 @@
     if (level > unlockedThrough || level < 1 || level > 70) return;
     clearRun();
     currentLevel = level; config = getLevelConfig(level); score = 0; misses = 0;
-    playing = true; levelStarted = false; startedAt = 0; worldCellAccumulator = 0; modePoolCursor = 0; redTrapAccumulator = .5; token += 1;
+    playing = false; levelStarted = false; onboarding=false; startedAt = 0; worldCellAccumulator = 0; modePoolCursor = 0; redTrapAccumulator = .5; equippedPowers=new Set();runTimeScale=1;token += 1;
     stageLabel.textContent = `Stage ${config.stage} · ${STAGES[config.stage - 1].name}`;
     levelLabel.textContent = `Level ${config.step}`;
     scoreEl.textContent = '0'; timeLeft.textContent = '30'; timerFill.style.transform = 'scaleX(1)';
     lifeEls.forEach(life => life.classList.remove('lost'));
     levelOverlay.classList.add('hidden');
-    showScreen('game');
+    powerCards.forEach(card=>card.setAttribute('aria-pressed','false'));
+    introTitle.textContent=`${STAGES[config.stage-1].name} · Level ${config.step}`;
+    const rule=config.mode==='opposite'?'Tap red, avoid green, and swipe opposite arrows.':config.mode==='quantum'?'Watch colors and arrows change before acting.':`Practice ${STAGES[config.stage-1].description.toLowerCase()}.`;
+    introSummary.textContent=`Survive 30 game seconds. ${rule}`;
+    mission.textContent='Review the level and equip any power-ups.';
+    showScreen('game');introVisible=true;levelIntro.classList.remove('hidden');
     onboardingType = config.openingType;
-    onboarding = true;
-    mission.textContent = onboardingMessage(onboardingType);
-    spawnTutorial(onboardingType);
   }
+  function togglePower(power){if(!introVisible)return;if(equippedPowers.has(power))equippedPowers.delete(power);else equippedPowers.add(power);runTimeScale=equippedPowers.has('time')?.75:1;powerCards.forEach(card=>card.setAttribute('aria-pressed',String(equippedPowers.has(card.dataset.power))));}
+  function beginSelectedLevel(){if(!introVisible||!config)return;introVisible=false;levelIntro.classList.add('hidden');playing=true;onboarding=true;mission.textContent=onboardingMessage(onboardingType);spawnTutorial(onboardingType);}
   function onboardingMessage(type) {
     return type === 'blue' ? (config.mode==='opposite'?'Swipe opposite the arrow to start':'Swipe the arrow to start')
       : type === 'yellow' ? 'Hold for one second to start'
@@ -338,11 +387,11 @@
       : config.mode === 'quantum' ? 'Colors and arrows switch after one second.'
       : config.stage === 1 ? 'Tap green. Avoid red.' : `Clear Stage ${config.stage} for 30 seconds`;
     levelRaf = requestAnimationFrame(tickLevel);
-    cycleTimer = setTimeout(nextCycle, Math.min(600, config.beatMs));
+    cycleTimer = setTimeout(nextCycle, scaledDelay(Math.min(600, config.beatMs)));
   }
   function tickLevel(now) {
     if (!playing || !levelStarted) return;
-    const remaining = Math.max(0, LEVEL_DURATION_MS - (now - startedAt));
+    const remaining = Math.max(0, LEVEL_DURATION_MS - (now - startedAt)*runTimeScale);
     timerFill.style.transform = `scaleX(${remaining / LEVEL_DURATION_MS})`;
     timerFill.style.background = remaining < 10000 ? 'var(--red)' : 'linear-gradient(90deg,#42dd7c,#58c7ef)';
     timeLeft.textContent = String(Math.ceil(remaining / 1000));
@@ -379,60 +428,69 @@
     const index=pickCell();if(index<0)return -1;
     const item={expiry:0,tutorial:true,switchTimer:0};redCells.set(index,item);
     cells[index].classList.add('red','tutorial');cells[index].dataset.prompt='Wait for green';
-    item.switchTimer=setTimeout(()=>{if(!redCells.has(index))return;redCells.delete(index);activeGreens.set(index,item);item.switchTimer=0;cells[index].classList.remove('red');cells[index].classList.add('green');cells[index].dataset.prompt='Tap green to begin';},1000);
+    item.switchTimer=setTimeout(()=>{if(!redCells.has(index))return;redCells.delete(index);activeGreens.set(index,item);item.switchTimer=0;cells[index].classList.remove('red');cells[index].classList.add('green');cells[index].dataset.prompt='Tap green to begin';},scaledDelay(1000));
     return index;
   }
   function spawnGreen(tutorial=false) {
     if(!tutorial&&activeGreens.size>=MAX_ACTIVE_GREENS)return -1;
     const index = pickCell(); if (index < 0) return -1;
-    const expiry = tutorial ? 0 : setTimeout(()=>finishColorTarget(index),config.greenLifetimeMs);
+    const expiry = tutorial ? 0 : setTimeout(()=>finishColorTarget(index),scaledDelay(config.greenLifetimeMs));
     const item={expiry,tutorial,switchTimer:0};activeGreens.set(index,item);
     cells[index].classList.add(config.mode==='opposite'?'red':'green');
-    if(config.mode==='quantum'&&!tutorial)item.switchTimer=setTimeout(()=>flipQuantumColor(index),1000);
+    if(config.mode==='quantum'&&!tutorial)item.switchTimer=setTimeout(()=>flipQuantumColor(index),scaledDelay(1000));
     if (tutorial) { cells[index].classList.add('tutorial'); cells[index].dataset.prompt=config.mode==='opposite'?'Tap red to begin':'Tap to begin'; }
     return index;
   }
   function spawnRed() {
     const index = pickCell(); if(index<0)return -1;
-    const expiry=setTimeout(()=>finishColorTarget(index),config.redLifetimeMs);
+    const expiry=setTimeout(()=>finishColorTarget(index),scaledDelay(config.redLifetimeMs));
     const item={expiry,tutorial:false,switchTimer:0};redCells.set(index,item);cells[index].classList.add(config.mode==='opposite'?'green':'red');
-    if(config.mode==='quantum')item.switchTimer=setTimeout(()=>flipQuantumColor(index),1000);
+    if(config.mode==='quantum')item.switchTimer=setTimeout(()=>flipQuantumColor(index),scaledDelay(1000));
     return index;
   }
   function flipQuantumArrow(index){const item=blueCells.get(index);if(!item)return;item.shownDirection=OPPOSITE_DIRECTIONS[item.shownDirection];item.direction=item.shownDirection;item.switchTimer=0;cells[index].dataset.arrow=ARROWS[item.shownDirection];}
+  function scheduleGodAssist(type,index){
+    const power={blue:'sky',yellow:'sun',rock:'rock'}[type];if(!power||!equippedPowers.has(power))return;
+    const map={blue:blueCells,yellow:yellowCells,rock:rockCells}[type];const item=map.get(index);if(!item)return;
+    if(type==='rock'){
+      const strike=()=>{const rock=rockCells.get(index);if(!rock)return;showToast('Rock God');hitRock(index);const remaining=rockCells.get(index);if(remaining)remaining.assistTimer=setTimeout(strike,170);};
+      item.assistTimer=setTimeout(strike,340);return;
+    }
+    item.assistTimer=setTimeout(()=>{if(!map.has(index))return;showToast(type==='blue'?'Sky God':'Sun God');resolveSuccess(type,index);},420);
+  }
   function spawnBlue(tutorial=false) {
     const index=pickCell();if(index<0)return -1;
     const shownDirection=DIRECTIONS[Math.floor(Math.random()*4)];
     const direction=config.mode==='opposite'?OPPOSITE_DIRECTIONS[shownDirection]:shownDirection;
-    const expiry=tutorial?0:setTimeout(()=>expireTarget('blue',index),config.blueLifetimeMs);
-    const item={expiry,tutorial,direction,shownDirection,switchTimer:0};blueCells.set(index,item);cells[index].classList.add('blue');cells[index].dataset.arrow=ARROWS[shownDirection];
-    if(config.mode==='quantum'&&!tutorial)item.switchTimer=setTimeout(()=>flipQuantumArrow(index),1000);
-    if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt=`Swipe ${direction}`;}return index;
+    const expiry=tutorial?0:setTimeout(()=>expireTarget('blue',index),scaledDelay(config.blueLifetimeMs));
+    const item={expiry,tutorial,direction,shownDirection,switchTimer:0,assistTimer:0};blueCells.set(index,item);cells[index].classList.add('blue');cells[index].dataset.arrow=ARROWS[shownDirection];
+    if(config.mode==='quantum'&&!tutorial)item.switchTimer=setTimeout(()=>flipQuantumArrow(index),scaledDelay(1000));
+    if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt=`Swipe ${direction}`;}scheduleGodAssist('blue',index);return index;
   }
   function spawnYellow(tutorial=false) {
     const index=pickCell();if(index<0)return -1;
-    const expiry=tutorial?0:setTimeout(()=>expireTarget('yellow',index),config.yellowLifetimeMs);
-    yellowCells.set(index,{expiry,tutorial,holding:false,holdTimer:0});cells[index].classList.add('yellow');
-    if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt='Hold to begin';}return index;
+    const expiry=tutorial?0:setTimeout(()=>expireTarget('yellow',index),scaledDelay(config.yellowLifetimeMs));
+    yellowCells.set(index,{expiry,tutorial,holding:false,holdTimer:0,assistTimer:0});cells[index].classList.add('yellow');
+    if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt='Hold to begin';}scheduleGodAssist('yellow',index);return index;
   }
   function spawnRock(tutorial=false) {
     const index=pickCell();if(index<0)return -1;
-    const expiry=tutorial?0:setTimeout(()=>expireTarget('rock',index),config.rockLifetimeMs);
+    const expiry=tutorial?0:setTimeout(()=>expireTarget('rock',index),scaledDelay(config.rockLifetimeMs));
     const hits=tutorial?3:config.rockMinHits+Math.floor(Math.random()*(config.rockMaxHits-config.rockMinHits+1));
     const hidden=config.mode==='quantum'&&!tutorial;
-    rockCells.set(index,{expiry,tutorial,hits,hidden});cells[index].classList.add('rock');cells[index].dataset.hits=hidden?'?':String(hits);
-    if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt='Tap 3 times';}return index;
+    rockCells.set(index,{expiry,tutorial,hits,hidden,assistTimer:0});cells[index].classList.add('rock');cells[index].dataset.hits=hidden?'?':String(hits);
+    if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt='Tap 3 times';}scheduleGodAssist('rock',index);return index;
   }
   function spawnPurple(tutorial=false) {
     const index=pickCell();if(index<0)return -1;
-    const expiry=tutorial?0:setTimeout(()=>expireTarget('purple',index),config.purpleLifetimeMs);
+    const expiry=tutorial?0:setTimeout(()=>expireTarget('purple',index),scaledDelay(config.purpleLifetimeMs));
     purpleCells.set(index,{expiry,tutorial});cells[index].classList.add('purple');
-    if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt='Tap to begin';}else{cells[index].classList.add('fading');}return index;
+    if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt='Tap to begin';}else{cells[index].style.setProperty('--purple-duration',`${scaledDelay(config.purpleLifetimeMs)}ms`);cells[index].classList.add('fading');}return index;
   }
   function clearTarget(type,index) {
     const map={green:activeGreens,red:redCells,blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];
-    const item=map.get(index);if(item?.expiry)clearTimeout(item.expiry);if(item?.holdTimer)clearTimeout(item.holdTimer);if(item?.switchTimer)clearTimeout(item.switchTimer);map.delete(index);
-    cells[index].className='cell';delete cells[index].dataset.arrow;delete cells[index].dataset.hits;delete cells[index].dataset.prompt;
+    const item=map.get(index);if(item?.expiry)clearTimeout(item.expiry);if(item?.holdTimer)clearTimeout(item.holdTimer);if(item?.switchTimer)clearTimeout(item.switchTimer);if(item?.assistTimer)clearTimeout(item.assistTimer);map.delete(index);
+    cells[index].className='cell';cells[index].style.removeProperty('--purple-duration');delete cells[index].dataset.arrow;delete cells[index].dataset.hits;delete cells[index].dataset.prompt;
   }
   function expireTarget(type,index) {
     const map={green:activeGreens,blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];
@@ -470,16 +528,16 @@
     for(let i=0;i<targetCount;i++)spawnActionTarget();
     const trapAccumulatorBefore=redTrapAccumulator;
     if(shouldSpawnRed()&&spawnRed()<0&&config.mode==='opposite'&&config.step<=2)redTrapAccumulator=trapAccumulatorBefore;
-    cycleTimer=setTimeout(nextCycle,config.beatMs);
+    cycleTimer=setTimeout(nextCycle,scaledDelay(config.beatMs));
   }
   function resolveSuccess(type,index) {
     const map={green:activeGreens,blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];const item=map.get(index);const wasTutorial=item?.tutorial;
-    if(item?.expiry)clearTimeout(item.expiry);if(item?.holdTimer)clearTimeout(item.holdTimer);if(item?.switchTimer)clearTimeout(item.switchTimer);map.delete(index);resolving.add(index);
+    if(item?.expiry)clearTimeout(item.expiry);if(item?.holdTimer)clearTimeout(item.holdTimer);if(item?.switchTimer)clearTimeout(item.switchTimer);if(item?.assistTimer)clearTimeout(item.assistTimer);map.delete(index);resolving.add(index);
     cells[index].classList.add('hit');score+=1;scoreEl.textContent=String(score);showToast(wasTutorial?'GO!':'+1');
     setTimeout(()=>{resolving.delete(index);clearCellVisual(index);},280);
     if(wasTutorial)startClock();
   }
-  function clearCellVisual(index){cells[index].className='cell';delete cells[index].dataset.arrow;delete cells[index].dataset.hits;delete cells[index].dataset.prompt;}
+  function clearCellVisual(index){cells[index].className='cell';cells[index].style.removeProperty('--purple-duration');delete cells[index].dataset.arrow;delete cells[index].dataset.hits;delete cells[index].dataset.prompt;}
   function tap(index) {
     if(!playing||resolving.has(index))return;
     if(rockCells.has(index)){hitRock(index);return;}
@@ -502,20 +560,38 @@
   function loseLife(){if(!playing)return;misses+=1;lifeEls[misses-1]?.classList.add('lost');showToast('Life lost');if(misses>=4)finishLevel(false);}
   function showToast(text){toast.textContent=text;toast.classList.remove('show');void toast.offsetWidth;toast.classList.add('show');}
   function clearTargets(){['green','red','blue','yellow','rock','purple'].forEach(type=>{const map={green:activeGreens,red:redCells,blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];[...map.keys()].forEach(index=>clearTarget(type,index));});resolving.clear();cells.forEach((_,index)=>clearCellVisual(index));}
-  function clearRun(){playing=false;clearTimeout(cycleTimer);cancelAnimationFrame(levelRaf);clearTargets();graceCells.clear();}
-  function finishLevel(success,immediateMap=false){if(!playing)return;const finishedLevel=currentLevel;clearRun();if(success){completed[finishedLevel]=Math.max(Number(completed[finishedLevel])||0,score);unlockedThrough=Math.max(unlockedThrough,Math.min(70,finishedLevel+1));persistProgress();resultBadge.textContent='✓';resultTitle.textContent='Level clear!';resultCopy.textContent=finishedLevel===70?'You cleared every Mook world.':`Level ${localLevel(Math.min(70,finishedLevel+1))} is now open.`;resultPrimary.textContent='World map';resultSecondary.textContent='Play again';}else{resultBadge.textContent='×';resultTitle.textContent='Try again';resultCopy.textContent='Four misses. Learn the rhythm and take another run.';resultPrimary.textContent='Retry level';resultSecondary.textContent='World map';}renderMap();if(immediateMap){returnToMap();return;}levelOverlay.classList.remove('hidden');resultPrimary.onclick=()=>success?returnToMap():selectLevel(finishedLevel);resultSecondary.onclick=()=>success?selectLevel(finishedLevel):returnToMap();if(success)setTimeout(()=>{if(!playing&&!levelOverlay.classList.contains('hidden'))returnToMap();},1800);}
+  function clearResultAnimation(){cancelAnimationFrame(resultRaf);awardTimers.forEach(clearTimeout);awardTimers=[];}
+  function clearRun(){playing=false;introVisible=false;levelIntro.classList.add('hidden');clearTimeout(cycleTimer);cancelAnimationFrame(levelRaf);clearResultAnimation();clearTargets();graceCells.clear();}
+  function animateResult(finalScore,earnedStars){
+    clearResultAnimation();resultScore.textContent='0';awardStars.forEach(star=>star.classList.remove('earned'));
+    const started=performance.now();const frame=now=>{const progress=Math.min(1,(now-started)/650);resultScore.textContent=String(Math.round(finalScore*(1-Math.pow(1-progress,3))));if(progress<1)resultRaf=requestAnimationFrame(frame);};resultRaf=requestAnimationFrame(frame);
+    awardStars.slice(0,earnedStars).forEach((star,index)=>awardTimers.push(setTimeout(()=>star.classList.add('earned'),150+index*130)));
+  }
+  function finishLevel(success,immediateMap=false){
+    if(!playing)return;const finishedLevel=currentLevel;const finalScore=score;const runStars=success?starsForMisses(misses):0;clearRun();
+    resultLevel.textContent=`${STAGES[stageFor(finishedLevel)].name} · Level ${localLevel(finishedLevel)}`;resultScore.textContent=String(finalScore);
+    if(success){
+      completed[finishedLevel]=Math.max(Number(completed[finishedLevel])||0,finalScore);starScores[finishedLevel]=Math.max(Number(starScores[finishedLevel])||0,runStars);unlockedThrough=Math.max(unlockedThrough,Math.min(70,finishedLevel+1));persistProgress();
+      resultCard.classList.add('celebrate');resultBadge.textContent='★';resultTitle.textContent=`Level ${localLevel(finishedLevel)} clear!`;resultCopy.textContent=`Best: ${starScores[finishedLevel]} stars. ${finishedLevel===70?'Every Mook world is complete.':`Level ${localLevel(finishedLevel+1)} is now open.`}`;resultPrimary.textContent='World map';resultSecondary.textContent='Play again';
+    }else{
+      resultCard.classList.remove('celebrate');resultBadge.textContent='×';resultTitle.textContent='Try again';resultCopy.textContent='Four misses. Learn the rhythm and take another run.';resultPrimary.textContent='Retry level';resultSecondary.textContent='World map';
+    }
+    renderMap();if(immediateMap){returnToMap();return;}levelOverlay.classList.remove('hidden');animateResult(finalScore,runStars);resultPrimary.onclick=()=>success?returnToMap():selectLevel(finishedLevel);resultSecondary.onclick=()=>success?selectLevel(finishedLevel):returnToMap();
+  }
   function returnToMap(){clearRun();levelOverlay.classList.add('hidden');renderMap();showScreen('map');const current=document.querySelector('.level-node.current');current?.scrollIntoView({block:'center',behavior:'smooth'});}
-  function finishLevelForTest(success){finishLevel(success,true);}
+  function finishLevelForTest(success,immediateMap=true){finishLevel(success,immediateMap);}
   function unlockThroughForTest(level){unlockedThrough=Math.max(1,Math.min(70,level));renderMap();}
   function spawnForTest(type){return({green:spawnGreen,red:spawnRed,blue:spawnBlue,yellow:spawnYellow,rock:spawnRock,purple:spawnPurple}[type]||(()=>-1))();}
   function clearTargetsForTest(){clearTargets();graceCells.clear();}
   function worldMixSequenceForTest(count){const saved=worldCellAccumulator,savedCursor=modePoolCursor;worldCellAccumulator=0;modePoolCursor=0;const sequence=Array.from({length:count},()=>nextWorldTargetType());worldCellAccumulator=saved;modePoolCursor=savedCursor;return sequence;}
   function redTrapSequenceForTest(count){const saved=redTrapAccumulator;redTrapAccumulator=.5;const sequence=Array.from({length:count},()=>shouldSpawnRed());redTrapAccumulator=saved;return sequence;}
-  function getState(){return{screen,level:currentLevel,playing,levelStarted,onboarding,onboardingType,score,misses,active:[...activeGreens.keys()],red:[...redCells.keys()],blue:[...blueCells.entries()].map(([index,item])=>({index,direction:item.direction,shownDirection:item.shownDirection,tutorial:item.tutorial})),yellow:[...yellowCells.keys()],rock:[...rockCells.entries()].map(([index,item])=>({index,hits:item.hits,hidden:Boolean(item.hidden),tutorial:item.tutorial})),purple:[...purpleCells.keys()],unlockedThrough};}
+  function getState(){return{screen,level:currentLevel,playing,levelStarted,onboarding,onboardingType,introVisible,equippedPowers:[...equippedPowers],timeScale:runTimeScale,starScores:{...starScores},score,misses,active:[...activeGreens.keys()],red:[...redCells.keys()],blue:[...blueCells.entries()].map(([index,item])=>({index,direction:item.direction,shownDirection:item.shownDirection,tutorial:item.tutorial})),yellow:[...yellowCells.keys()],rock:[...rockCells.entries()].map(([index,item])=>({index,hits:item.hits,hidden:Boolean(item.hidden),tutorial:item.tutorial})),purple:[...purpleCells.keys()],unlockedThrough};}
 
+  powerCards.forEach(card=>card.addEventListener('click',()=>togglePower(card.dataset.power)));
+  introStart.addEventListener('click',beginSelectedLevel);
   mapBack.addEventListener('click',returnToMap);
   renderMap();
-  window.__mookLevels={getLevelConfig,getState,selectLevel,tap,resolveSwipe,beginHold,endHold,hitRock,finishLevelForTest,unlockThroughForTest,returnToMap,spawnForTest,expireForTest:expireTarget,clearTargetsForTest,worldMixSequenceForTest,redTrapSequenceForTest,pauseForTest:()=>clearTimeout(cycleTimer)};
+  window.__mookLevels={getLevelConfig,getState,selectLevel,tap,resolveSwipe,beginHold,endHold,hitRock,finishLevelForTest,unlockThroughForTest,returnToMap,spawnForTest,expireForTest:expireTarget,clearTargetsForTest,worldMixSequenceForTest,redTrapSequenceForTest,starsForMisses,scaledDelayForTest:scaledDelay,pauseForTest:()=>clearTimeout(cycleTimer)};
 </script>
 </body>
 </html>

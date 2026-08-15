@@ -17,6 +17,7 @@ let browser;
   assert.equal(await page.locator('.level-node.unlocked').count(), 1, 'only level one starts unlocked');
   assert.match(await page.locator('#mapTitle').textContent(), /Green Valley/);
 
+  assert.deepEqual(await page.evaluate(() => [0,1,2,3,4].map(window.__mookLevels.starsForMisses)), [4,3,2,1,0]);
   const configs = await page.evaluate(() => Array.from({ length: 70 }, (_, index) => window.__mookLevels.getLevelConfig(index + 1)));
   for (let stage = 0; stage < 7; stage++) {
     const group = configs.slice(stage * 10, stage * 10 + 10);
@@ -68,6 +69,25 @@ let browser;
   let state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.screen, 'game');
   assert.equal(state.level, 1);
+  assert.equal(state.introVisible, true, 'selecting a level should show its briefing before any target');
+  assert.equal(state.onboarding, false);
+  assert.equal(state.active.length, 0);
+  assert.match(await page.locator('#introTitle').textContent(), /Green Valley/);
+  assert.match(await page.locator('#introSummary').textContent(), /30 game seconds/);
+  assert.deepEqual(await page.locator('.power-card').allTextContents(), [
+    'Sky GodAuto-clears every blue swipeUnlimited',
+    'Sun GodAuto-completes every yellow holdUnlimited',
+    'Rock GodAuto-breaks every gray rockUnlimited',
+    'Time SlowSlows game time by 25%Unlimited'
+  ]);
+  await page.click('.power-card[data-power="time"]');
+  assert.equal(await page.locator('.power-card[data-power="time"]').getAttribute('aria-pressed'), 'true');
+  state = await page.evaluate(() => window.__mookLevels.getState());
+  assert.deepEqual(state.equippedPowers, ['time']);
+  assert.equal(state.timeScale, .75);
+  assert.ok(Math.abs(await page.evaluate(() => window.__mookLevels.scaledDelayForTest(2000)) - 2666.6667) < .01);
+  await page.click('#introStart');
+  state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboarding, true);
   assert.equal(state.levelStarted, false);
   assert.equal(state.active.length, 1);
@@ -78,9 +98,31 @@ let browser;
   await page.evaluate(() => window.__mookLevels.finishLevelForTest(true));
   assert.equal(await page.locator('#mapScreen').getAttribute('class'), 'screen map-screen active');
   assert.equal(await page.locator('.level-node[data-level="2"]').getAttribute('class'), 'level-node unlocked current');
+  assert.equal(await page.locator('.level-node[data-level="1"] .level-stars').textContent(), '★★★★');
+  assert.equal((await page.evaluate(() => window.__mookLevels.getState())).starScores['1'], 4);
+
+  // A weaker replay shows its own award but never lowers the stored best stars.
+  await page.click('.level-node[data-level="1"]', { force: true });
+  await page.click('#introStart');
+  state = await page.evaluate(() => window.__mookLevels.getState());
+  await page.evaluate(index => window.__mookLevels.tap(index), state.active[0]);
+  await wait(330);
+  await page.evaluate(() => { window.__mookLevels.pauseForTest(); window.__mookLevels.clearTargetsForTest(); window.__mookLevels.tap(0); window.__mookLevels.tap(1); });
+  await page.evaluate(() => window.__mookLevels.finishLevelForTest(true, false));
+  await wait(800);
+  assert.equal(await page.locator('#resultTitle').textContent(), 'Level 1 clear!');
+  assert.equal(await page.locator('#resultScore').textContent(), '1');
+  assert.equal(await page.locator('.award-star.earned').count(), 2);
+  assert.match(await page.locator('#resultCopy').textContent(), /Best: 4 stars/);
+  assert.equal((await page.evaluate(() => window.__mookLevels.getState())).starScores['1'], 4);
+  await wait(1200);
+  assert.equal(await page.locator('#levelOverlay').getAttribute('class'), 'level-overlay', 'the congratulations screen should wait for the player');
+  await page.click('#resultPrimary');
+  assert.equal(await page.locator('.level-node[data-level="1"] .level-stars').textContent(), '★★★★');
 
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(11));
   await page.click('.level-node[data-level="11"]', { force: true });
+  await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboardingType, 'blue');
   assert.equal(state.blue.length, 1);
@@ -95,6 +137,7 @@ let browser;
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(21));
   await page.click('.level-node[data-level="21"]', { force: true });
+  await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboardingType, 'yellow');
   assert.equal(state.yellow.length, 1);
@@ -117,6 +160,7 @@ let browser;
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(31));
   await page.click('.level-node[data-level="31"]', { force: true });
+  await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboardingType, 'rock');
   assert.equal(state.rock.length, 1);
@@ -131,6 +175,7 @@ let browser;
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(20));
   await page.click('.level-node[data-level="20"]', { force: true });
+  await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboardingType, 'blue');
   const openingBlue = state.blue[0];
@@ -158,6 +203,7 @@ let browser;
     await page.evaluate(() => window.__mookLevels.returnToMap());
     await page.evaluate(level => window.__mookLevels.unlockThroughForTest(level), level);
     await page.click(`.level-node[data-level="${level}"]`, { force: true });
+    await page.click('#introStart');
     let opening = (await page.evaluate(() => window.__mookLevels.getState())).rock[0];
     assert.equal(opening.hits, 3, `level ${level} should still open with a three-hit tutorial rock`);
     await page.evaluate(index => {
@@ -190,6 +236,7 @@ let browser;
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(41));
   await page.click('.level-node[data-level="41"]', { force: true });
+  await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboardingType, 'purple');
   assert.equal(state.levelStarted, false);
@@ -206,15 +253,13 @@ let browser;
   await page.evaluate(() => {
     window.__mookLevels.pauseForTest();
     window.__mookLevels.clearTargetsForTest();
-    window.__mookLevels.spawnForTest('purple');
   });
-  state = await page.evaluate(() => window.__mookLevels.getState());
-  assert.equal(state.purple.length, 1);
-  const purpleFade = await page.evaluate(index => {
+  const purpleFade = await page.evaluate(() => {
+    const index=window.__mookLevels.spawnForTest('purple');
     const cell = document.querySelectorAll('.cell')[index];
     const style = getComputedStyle(cell);
-    return { className: cell.className, animationName: style.animationName, animationDuration: style.animationDuration };
-  }, state.purple[0]);
+    return { index, className: cell.className, animationName: style.animationName, animationDuration: style.animationDuration };
+  });
   assert.match(purpleFade.className, /fading/);
   assert.equal(purpleFade.animationName, 'purpleFade');
   assert.equal(purpleFade.animationDuration, '1s');
@@ -223,9 +268,10 @@ let browser;
   const purpleMidFade = await page.evaluate(index => {
     const style = getComputedStyle(document.querySelectorAll('.cell')[index]);
     return { opacity: Number(style.opacity), transform: style.transform };
-  }, state.purple[0]);
+  }, purpleFade.index);
   assert.ok(purpleMidFade.opacity < 0.8, `purple should be visibly transparent halfway through; got ${purpleMidFade.opacity}`);
   assert.equal(purpleMidFade.transform, 'none', 'purple should remain full size during its one-second fade');
+  state = await page.evaluate(() => window.__mookLevels.getState());
   const missesBeforePurpleExpiry = state.misses;
   await wait(1300);
   state = await page.evaluate(() => window.__mookLevels.getState());
@@ -236,6 +282,7 @@ let browser;
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(51));
   await page.click('.level-node[data-level="51"]', { force: true });
+  await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboardingType, 'opposite');
   assert.equal(state.active.length, 1);
@@ -263,6 +310,7 @@ let browser;
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(53));
   await page.click('.level-node[data-level="53"]', { force: true });
+  await page.click('#introStart');
   const oppositeBlue = (await page.evaluate(() => window.__mookLevels.getState())).blue[0];
   assert.deepEqual([...new Set(await page.evaluate(() => window.__mookLevels.worldMixSequenceForTest(20)))].sort(), ['blue','green']);
   const directionOpposites = { left: 'right', right: 'left', up: 'down', down: 'up' };
@@ -273,12 +321,14 @@ let browser;
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(58));
   await page.click('.level-node[data-level="58"]', { force: true });
+  await page.click('#introStart');
   assert.deepEqual([...new Set(await page.evaluate(() => window.__mookLevels.worldMixSequenceForTest(25)))].sort(), ['blue','green','purple','rock','yellow']);
 
   // World 7: colors and arrows physically flip at one second; rocks hide their strength until the first hit.
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(61));
   await page.click('.level-node[data-level="61"]', { force: true });
+  await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboardingType, 'quantum');
   assert.equal(state.red.length, 1);
@@ -325,6 +375,32 @@ let browser;
   assert.equal(revealedRock.hidden, false);
   assert.equal(revealedRock.hits, hiddenRock.hits - 1);
   assert.equal(await page.evaluate(index => document.querySelectorAll('.cell')[index].dataset.hits, quantumRock), String(revealedRock.hits));
+
+  // Unlimited Gods automatically clear their matching cells for one selected level only.
+  async function verifyGod(level, power, type, settleMs) {
+    await page.evaluate(() => window.__mookLevels.returnToMap());
+    await page.evaluate(level => window.__mookLevels.unlockThroughForTest(level), level);
+    await page.click(`.level-node[data-level="${level}"]`, { force: true });
+    assert.equal((await page.evaluate(() => window.__mookLevels.getState())).equippedPowers.length, 0, 'power-ups reset for each run');
+    await page.click(`.power-card[data-power="${power}"]`);
+    await page.click('#introStart');
+    await wait(settleMs);
+    let godState = await page.evaluate(() => window.__mookLevels.getState());
+    assert.equal(godState.levelStarted, true, `${power} should automatically clear its tutorial opener`);
+    assert.deepEqual(godState.equippedPowers, [power]);
+    await page.evaluate(() => { window.__mookLevels.pauseForTest(); window.__mookLevels.clearTargetsForTest(); });
+    godState = await page.evaluate(() => window.__mookLevels.getState());
+    const before = godState.score;
+    await page.evaluate(type => window.__mookLevels.spawnForTest(type), type);
+    await wait(settleMs);
+    godState = await page.evaluate(() => window.__mookLevels.getState());
+    assert.equal(godState[type].length, 0, `${power} should clear regular ${type} targets`);
+    assert.equal(godState.score, before + 1);
+  }
+  await verifyGod(11, 'sky', 'blue', 700);
+  await verifyGod(21, 'sun', 'yellow', 700);
+  await verifyGod(31, 'rock', 'rock', 1500);
+  assert.match(await page.locator('#stageLabel').textContent(), /Rock Summit/);
 
   console.log(JSON.stringify({ ok: true, levels: configs.length, finalState: state }));
 })().catch(error => {

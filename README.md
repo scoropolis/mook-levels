@@ -7,6 +7,11 @@ A separate level-based edition of Mook. The original endless score-chaser remain
 - 7 themed stages with 10 levels each
 - 30-second levels
 - Persistent unlock progress in the browser
+- Every clear awards one to four stars from remaining lives; each level permanently keeps its best star result
+- Level-clear cards animate the point total and earned stars and wait for the player to continue
+- Every level starts with a briefing and unlimited test power-ups for that run
+- Sky God clears blue swipes, Sun God clears yellow holds, and Rock God breaks gray rocks automatically
+- Time Slow runs game time at 75% speed, stretching the same 30 game seconds to 40 real seconds
 - Every level opens with a hands-on world-specific interaction and waits for the player
 - Openers progress through green tap, blue swipe, yellow hold, three-hit rock, purple tap, opposite red tap, and quantum red-to-green change
 - Difficulty rises across each set of 10 levels
@@ -20,7 +25,7 @@ A separate level-based edition of Mook. The original endless score-chaser remain
 - Stage 1: green targets and red traps
 - Stage 2: adds blue directional swipes
 - Stage 3: adds yellow hold targets
-- Stage 4: adds three-hit rocks
+- Stage 4: Rock Summit adds three-hit rocks
 - Stage 4 Levels 5–9 vary regular rocks from two to four hits; Level 10 can also produce five-hit rocks
 - Stage 5: adds one-second purple tap cells; every level waits on a purple opener before its timer starts
 - Stage 6: Reverse Realm swaps green/red behavior and requires swiping opposite blue arrows
