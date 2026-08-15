@@ -52,7 +52,17 @@ let browser;
   assert.ok(configs[50].beatMs > configs[51].beatMs, 'Opposite Level 1 should be easier than Level 2');
   assert.ok(configs[52].beatMs > configs[53].beatMs && configs[53].beatMs > configs[54].beatMs, 'Opposite blue levels should ramp easy to hard');
   assert.ok(configs[57].beatMs > configs[58].beatMs && configs[58].beatMs > configs[59].beatMs, 'Opposite all-item levels should ramp easy to hard');
-  assert.equal(configs.slice(60, 70).every(config => config.openingType === 'quantum' && config.mode === 'quantum'), true);
+  assert.deepEqual(configs.slice(60, 70).map(config => config.openingType), ['quantum','quantum','blue','blue','blue','yellow','rock','purple','quantum','quantum']);
+  assert.equal(configs.slice(60, 70).every(config => config.mode === 'quantum'), true);
+  assert.deepEqual(configs[60].mechanics, ['green','red']);
+  assert.deepEqual(configs[61].mechanics, ['green','red']);
+  assert.deepEqual(configs[62].mechanics, ['green','red','blue']);
+  assert.deepEqual(configs[65].mechanics, ['green','red','blue','yellow']);
+  assert.deepEqual(configs[66].mechanics, ['green','red','blue','yellow','rock']);
+  assert.deepEqual(configs[67].mechanics, ['green','red','blue','yellow','rock','purple']);
+  assert.ok(configs[60].beatMs > configs[61].beatMs, 'Quantum Level 1 should be easier than Level 2');
+  assert.ok(configs[62].beatMs > configs[63].beatMs && configs[63].beatMs > configs[64].beatMs, 'Quantum blue levels should ramp easy to hard');
+  assert.ok(configs[67].beatMs > configs[68].beatMs && configs[68].beatMs > configs[69].beatMs, 'Quantum all-item levels should ramp easy to hard');
   assert.equal(configs.slice(40, 50).every(config => config.purpleLifetimeMs === 1000), true);
   assert.equal(configs.slice(30, 34).every(config => config.rockMinHits === 3 && config.rockMaxHits === 3), true);
   assert.equal(configs.slice(34, 39).every(config => config.rockMinHits === 2 && config.rockMaxHits === 4), true);
@@ -328,6 +338,9 @@ let browser;
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(61));
   await page.click('.level-node[data-level="61"]', { force: true });
+  assert.deepEqual([...new Set(await page.evaluate(() => window.__mookLevels.worldMixSequenceForTest(20)))], ['green'], 'Quantum Level 1 should only schedule quantum red/green play');
+  const quantumOpeningTrapMix=await page.evaluate(() => window.__mookLevels.redTrapSequenceForTest(12));
+  assert.ok(quantumOpeningTrapMix.filter(Boolean).length>=2, 'Quantum Level 1 should pace in red cells that later become green');
   await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboardingType, 'quantum');
@@ -375,6 +388,32 @@ let browser;
   assert.equal(revealedRock.hidden, false);
   assert.equal(revealedRock.hits, hiddenRock.hits - 1);
   assert.equal(await page.evaluate(index => document.querySelectorAll('.cell')[index].dataset.hits, quantumRock), String(revealedRock.hits));
+
+  // Quantum mechanics are introduced gradually rather than all appearing in Level 1.
+  await page.evaluate(() => window.__mookLevels.returnToMap());
+  await page.evaluate(() => window.__mookLevels.unlockThroughForTest(63));
+  await page.click('.level-node[data-level="63"]', { force: true });
+  await page.click('#introStart');
+  let stagedQuantum=await page.evaluate(() => window.__mookLevels.getState());
+  assert.equal(stagedQuantum.onboardingType,'blue');
+  const stagedArrowBefore=stagedQuantum.blue[0];
+  await wait(1300);
+  const stagedArrowAfter=(await page.evaluate(() => window.__mookLevels.getState())).blue[0];
+  assert.equal(stagedArrowAfter.shownDirection,directionOpposites[stagedArrowBefore.shownDirection], 'Quantum arrow tutorial should visibly reverse after one second');
+
+  await page.evaluate(() => window.__mookLevels.returnToMap());
+  await page.evaluate(() => window.__mookLevels.unlockThroughForTest(67));
+  await page.click('.level-node[data-level="67"]', { force: true });
+  await page.click('#introStart');
+  stagedQuantum=await page.evaluate(() => window.__mookLevels.getState());
+  assert.equal(stagedQuantum.onboardingType,'rock');
+  assert.equal(stagedQuantum.rock[0].hidden,true);
+  assert.equal(await page.evaluate(index => document.querySelectorAll('.cell')[index].dataset.hits,stagedQuantum.rock[0].index),'?');
+
+  await page.evaluate(() => window.__mookLevels.returnToMap());
+  await page.evaluate(() => window.__mookLevels.unlockThroughForTest(68));
+  await page.click('.level-node[data-level="68"]', { force: true });
+  assert.deepEqual([...new Set(await page.evaluate(() => window.__mookLevels.worldMixSequenceForTest(25)))].sort(),['blue','green','purple','rock','yellow']);
 
   // Unlimited Gods automatically clear their matching cells for one selected level only.
   async function verifyGod(level, power, type, settleMs) {
