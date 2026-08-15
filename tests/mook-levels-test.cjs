@@ -34,6 +34,14 @@ let browser;
   assert.equal(configs.every(config => config.blueLifetimeMs === 2000), true, 'blue cells should always allow two seconds');
   assert.equal(configs.every(config => config.yellowLifetimeMs === 3000), true, 'yellow holds should allow three seconds');
   assert.equal(configs.every(config => config.rockLifetimeMs === 4000), true, 'rocks should allow four seconds');
+  assert.equal(configs.slice(0, 10).every(config => config.openingType === 'green'), true);
+  assert.equal(configs.slice(10, 20).every(config => config.openingType === 'blue'), true);
+  assert.equal(configs.slice(20, 30).every(config => config.openingType === 'yellow'), true);
+  assert.equal(configs.slice(30, 40).every(config => config.openingType === 'rock'), true);
+  assert.equal(configs.slice(30, 34).every(config => config.rockMinHits === 3 && config.rockMaxHits === 3), true);
+  assert.equal(configs.slice(34, 39).every(config => config.rockMinHits === 2 && config.rockMaxHits === 4), true);
+  assert.equal(configs[39].rockMinHits, 2);
+  assert.equal(configs[39].rockMaxHits, 5);
 
   await page.click('.level-node[data-level="1"]', { force: true });
   let state = await page.evaluate(() => window.__mookLevels.getState());
@@ -72,6 +80,18 @@ let browser;
   await page.evaluate(index => window.__mookLevels.beginHold(index), state.yellow[0]);
   await wait(1100);
   assert.equal((await page.evaluate(() => window.__mookLevels.getState())).levelStarted, true);
+  await wait(320);
+  await page.evaluate(() => {
+    window.__mookLevels.pauseForTest();
+    window.__mookLevels.clearTargetsForTest();
+  });
+  const regularYellow = await page.evaluate(() => window.__mookLevels.spawnForTest('yellow'));
+  const regularYellowStyle = await page.evaluate(index => {
+    const cell = document.querySelectorAll('.cell')[index];
+    return { className: cell.className, before: getComputedStyle(cell, '::before').content };
+  }, regularYellow);
+  assert.equal(regularYellowStyle.className, 'cell yellow');
+  assert.ok(regularYellowStyle.before === 'none' || regularYellowStyle.before === 'normal', `regular yellow should have no HOLD label, got ${regularYellowStyle.before}`);
 
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(31));
@@ -79,18 +99,22 @@ let browser;
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboardingType, 'rock');
   assert.equal(state.rock.length, 1);
+  assert.equal(state.rock[0].hits, 3);
   await page.evaluate(index => {
     window.__mookLevels.hitRock(index);
     window.__mookLevels.hitRock(index);
     window.__mookLevels.hitRock(index);
-  }, state.rock[0]);
+  }, state.rock[0].index);
   assert.equal((await page.evaluate(() => window.__mookLevels.getState())).levelStarted, true);
 
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(20));
   await page.click('.level-node[data-level="20"]', { force: true });
   state = await page.evaluate(() => window.__mookLevels.getState());
-  await page.evaluate(index => window.__mookLevels.tap(index), state.active[0]);
+  assert.equal(state.onboardingType, 'blue');
+  const openingBlue = state.blue[0];
+  const openingSwipe = { up:[0,-60], right:[60,0], down:[0,60], left:[-60,0] }[openingBlue.direction];
+  await page.evaluate(({ blue, swipe }) => window.__mookLevels.resolveSwipe(blue.index, swipe[0], swipe[1]), { blue: openingBlue, swipe: openingSwipe });
   await wait(320);
   await page.evaluate(() => window.__mookLevels.pauseForTest());
   await page.evaluate(() => {
@@ -108,6 +132,30 @@ let browser;
   const missesAfterExpiry = (await page.evaluate(() => window.__mookLevels.getState())).misses;
   await page.evaluate(index => window.__mookLevels.tap(index), graceIndex);
   assert.equal((await page.evaluate(() => window.__mookLevels.getState())).misses, missesAfterExpiry, 'a late tap must not lose a second life');
+
+  async function sampleRockHits(level, count) {
+    await page.evaluate(() => window.__mookLevels.returnToMap());
+    await page.evaluate(level => window.__mookLevels.unlockThroughForTest(level), level);
+    await page.click(`.level-node[data-level="${level}"]`, { force: true });
+    let opening = (await page.evaluate(() => window.__mookLevels.getState())).rock[0];
+    assert.equal(opening.hits, 3, `level ${level} should still open with a three-hit tutorial rock`);
+    await page.evaluate(index => {
+      window.__mookLevels.hitRock(index); window.__mookLevels.hitRock(index); window.__mookLevels.hitRock(index);
+    }, opening.index);
+    await wait(320);
+    await page.evaluate(() => window.__mookLevels.pauseForTest());
+    const hits = [];
+    for (let i = 0; i < count; i++) {
+      await page.evaluate(() => window.__mookLevels.clearTargetsForTest());
+      await page.evaluate(() => window.__mookLevels.spawnForTest('rock'));
+      hits.push((await page.evaluate(() => window.__mookLevels.getState())).rock[0].hits);
+    }
+    return hits;
+  }
+  const midWorldRocks = await sampleRockHits(35, 20);
+  assert.equal(midWorldRocks.every(hits => hits >= 2 && hits <= 4), true);
+  const finalWorldRocks = await sampleRockHits(40, 30);
+  assert.equal(finalWorldRocks.every(hits => hits >= 2 && hits <= 5), true);
 
   console.log(JSON.stringify({ ok: true, levels: configs.length, finalState: state }));
 })().catch(error => {
