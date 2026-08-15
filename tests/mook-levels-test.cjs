@@ -101,6 +101,16 @@ let browser;
   assert.equal(state.onboarding, true);
   assert.equal(state.levelStarted, false);
   assert.equal(state.active.length, 1);
+  const selectionGuard=await page.evaluate(()=>{
+    const game=document.querySelector('#gameScreen'),cell=document.querySelector('.cell'),mission=document.querySelector('#mission');
+    const event=new Event('selectstart',{bubbles:true,cancelable:true});mission.dispatchEvent(event);
+    const selection=getSelection(),range=document.createRange();range.selectNodeContents(mission);selection.removeAllRanges();selection.addRange(range);document.dispatchEvent(new Event('selectionchange'));
+    return{gameUserSelect:getComputedStyle(game).userSelect,cellUserSelect:getComputedStyle(cell).userSelect,selectStartPrevented:event.defaultPrevented,selectionText:selection.toString()};
+  });
+  assert.equal(selectionGuard.gameUserSelect,'none');
+  assert.equal(selectionGuard.cellUserSelect,'none');
+  assert.equal(selectionGuard.selectStartPrevented,true);
+  assert.equal(selectionGuard.selectionText,'','gameplay should immediately clear accidental native text selections');
   await page.evaluate(index => window.__mookLevels.tap(index), state.active[0]);
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.levelStarted, true, 'first interaction should start the level timer');
