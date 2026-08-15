@@ -29,6 +29,11 @@ let browser;
   assert.ok(configs[20].mechanics.includes('yellow'));
   assert.ok(configs[30].mechanics.includes('rock'));
   assert.equal(configs.every(config => config.durationMs === 30000), true);
+  assert.equal(configs.every(config => config.greenLifetimeMs === 2000), true, 'green cells should always allow two seconds');
+  assert.equal(configs.every(config => config.redLifetimeMs === 2000), true, 'red cells should remain for two seconds');
+  assert.equal(configs.every(config => config.blueLifetimeMs === 2000), true, 'blue cells should always allow two seconds');
+  assert.equal(configs.every(config => config.yellowLifetimeMs === 3000), true, 'yellow holds should allow three seconds');
+  assert.equal(configs.every(config => config.rockLifetimeMs === 4000), true, 'rocks should allow four seconds');
 
   await page.click('.level-node[data-level="1"]', { force: true });
   let state = await page.evaluate(() => window.__mookLevels.getState());
@@ -80,6 +85,29 @@ let browser;
     window.__mookLevels.hitRock(index);
   }, state.rock[0]);
   assert.equal((await page.evaluate(() => window.__mookLevels.getState())).levelStarted, true);
+
+  await page.evaluate(() => window.__mookLevels.returnToMap());
+  await page.evaluate(() => window.__mookLevels.unlockThroughForTest(20));
+  await page.click('.level-node[data-level="20"]', { force: true });
+  state = await page.evaluate(() => window.__mookLevels.getState());
+  await page.evaluate(index => window.__mookLevels.tap(index), state.active[0]);
+  await wait(320);
+  await page.evaluate(() => window.__mookLevels.pauseForTest());
+  await page.evaluate(() => {
+    for (let i = 0; i < 8; i++) window.__mookLevels.spawnForTest('green');
+    for (let i = 0; i < 8; i++) window.__mookLevels.spawnForTest(i % 2 ? 'blue' : 'red');
+  });
+  state = await page.evaluate(() => window.__mookLevels.getState());
+  const activeTargetCount = state.active.length + state.red.length + state.blue.length + state.yellow.length + state.rock.length;
+  assert.ok(activeTargetCount <= 4, `the board should cap active targets at four, got ${activeTargetCount}`);
+  assert.ok(state.active.length <= 3, `the board should cap green targets at three, got ${state.active.length}`);
+
+  await page.evaluate(() => window.__mookLevels.clearTargetsForTest());
+  const graceIndex = await page.evaluate(() => window.__mookLevels.spawnForTest('green'));
+  await page.evaluate(index => window.__mookLevels.expireForTest('green', index), graceIndex);
+  const missesAfterExpiry = (await page.evaluate(() => window.__mookLevels.getState())).misses;
+  await page.evaluate(index => window.__mookLevels.tap(index), graceIndex);
+  assert.equal((await page.evaluate(() => window.__mookLevels.getState())).misses, missesAfterExpiry, 'a late tap must not lose a second life');
 
   console.log(JSON.stringify({ ok: true, levels: configs.length, finalState: state }));
 })().catch(error => {
