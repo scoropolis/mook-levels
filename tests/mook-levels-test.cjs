@@ -45,6 +45,12 @@ let browser;
   assert.equal(configs.slice(34, 39).every(config => config.rockMinHits === 2 && config.rockMaxHits === 4), true);
   assert.equal(configs[39].rockMinHits, 2);
   assert.equal(configs[39].rockMaxHits, 5);
+  for (let stage = 0; stage < 5; stage++) {
+    const group = configs.slice(stage * 10, stage * 10 + 10);
+    assert.ok(Math.abs(group[0].worldCellShare - 0.10) < 0.0001, `stage ${stage + 1} level 1 should use 10% world cells`);
+    assert.ok(Math.abs(group[9].worldCellShare - 0.33) < 0.0001, `stage ${stage + 1} level 10 should use 33% world cells`);
+    assert.equal(group.every((config, index) => index === 0 || config.worldCellShare > group[index - 1].worldCellShare), true);
+  }
 
   await page.click('.level-node[data-level="1"]', { force: true });
   let state = await page.evaluate(() => window.__mookLevels.getState());
@@ -159,6 +165,15 @@ let browser;
   assert.equal(midWorldRocks.every(hits => hits >= 2 && hits <= 4), true);
   const finalWorldRocks = await sampleRockHits(40, 30);
   assert.equal(finalWorldRocks.every(hits => hits >= 2 && hits <= 5), true);
+  const summitMix = await page.evaluate(() => window.__mookLevels.worldMixSequenceForTest(100));
+  assert.equal(summitMix.filter(type => type === 'rock').length, 33, 'Summit level 10 should schedule 33 rocks per 100 action cells');
+  let longestGreenRun = 0;
+  let currentGreenRun = 0;
+  for (const type of summitMix) {
+    currentGreenRun = type === 'green' ? currentGreenRun + 1 : 0;
+    longestGreenRun = Math.max(longestGreenRun, currentGreenRun);
+  }
+  assert.ok(longestGreenRun <= 3, `Summit level 10 should never go more than three action cells without a rock; got ${longestGreenRun}`);
 
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(41));
@@ -167,6 +182,7 @@ let browser;
   assert.equal(state.onboardingType, 'purple');
   assert.equal(state.levelStarted, false);
   assert.equal(state.purple.length, 1);
+  assert.equal(await page.evaluate(index => document.querySelectorAll('.cell')[index].classList.contains('fading'), state.purple[0]), false, 'the untimed opening purple should not fade');
   await page.evaluate(index => window.__mookLevels.tap(index), state.purple[0]);
   assert.equal((await page.evaluate(() => window.__mookLevels.getState())).levelStarted, true);
   await wait(320);
@@ -177,6 +193,14 @@ let browser;
   });
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.purple.length, 1);
+  const purpleFade = await page.evaluate(index => {
+    const cell = document.querySelectorAll('.cell')[index];
+    const style = getComputedStyle(cell);
+    return { className: cell.className, animationName: style.animationName, animationDuration: style.animationDuration };
+  }, state.purple[0]);
+  assert.match(purpleFade.className, /fading/);
+  assert.equal(purpleFade.animationName, 'purpleFade');
+  assert.equal(purpleFade.animationDuration, '1s');
   const missesBeforePurpleExpiry = state.misses;
   await wait(1300);
   state = await page.evaluate(() => window.__mookLevels.getState());

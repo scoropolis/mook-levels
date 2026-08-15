@@ -73,6 +73,7 @@
     .cell.yellow.tutorial:before{content:"HOLD";position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(20px,7vw,34px);letter-spacing:.06em}.cell.yellow.holding{animation:hold 1s linear forwards}
     .cell.rock{background:radial-gradient(circle at 34% 26%,rgba(255,255,255,.28),transparent 22%),linear-gradient(145deg,#9aa9b0,#55636b);border-color:#c7d1d5;box-shadow:0 5px 0 #46535a}.cell.rock:before{content:attr(data-hits);position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(48px,18vw,82px);text-shadow:0 3px 0 rgba(0,0,0,.25)}
     .cell.purple{background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.42),transparent 30%),var(--purple);border-color:#dbb6ff;box-shadow:0 5px 0 #7133b2}
+    .cell.purple.fading{animation:purpleFade 1s linear forwards}
     .cell.tutorial:after{content:attr(data-prompt);position:absolute;left:8px;right:8px;bottom:12px;text-align:center;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
     .cell.hit{animation:hit .28s ease-out}.cell.wrong{animation:wrong .3s linear}
     .level-overlay{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:28px;background:rgba(23,40,56,.82);backdrop-filter:blur(10px)}.level-overlay.hidden{display:none}
@@ -83,6 +84,7 @@
     @keyframes hit{50%{transform:scale(1.08);filter:brightness(1.25)}to{opacity:.3;transform:scale(.7)}}
     @keyframes wrong{25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}}
     @keyframes hold{to{transform:scale(.28);border-radius:50%;filter:brightness(1.2)}}
+    @keyframes purpleFade{0%{opacity:1;filter:brightness(1.1) saturate(1.15)}100%{opacity:.06;filter:brightness(.8) saturate(.45)}}
     @keyframes toast{20%,75%{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-12px)}}
     @media(max-height:650px){.game-top{padding-top:8px}.mission{margin-bottom:6px}.board{gap:6px}.cell{border-radius:17px}}
     @media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
@@ -183,6 +185,7 @@
   let cycleTimer = 0;
   let levelRaf = 0;
   let token = 0;
+  let worldCellAccumulator = 0;
   let activeGreens = new Map();
   let redCells = new Map();
   let blueCells = new Map();
@@ -217,11 +220,12 @@
     if (stageIndex >= 3) mechanics.push('rock');
     if (stageIndex >= 4) mechanics.push('purple');
     const progress = (step - 1) / 9;
+    const worldCellShare = .10 + progress * .23;
     const openingType = STAGES[stageIndex].mechanic;
     const rockMinHits = stageIndex < 3 || step < 5 ? 3 : 2;
     const rockMaxHits = stageIndex < 3 || step < 5 ? 3 : step === 10 ? 5 : 4;
     return {
-      level, stage:stageIndex + 1, step, difficulty, mechanics, openingType, rockMinHits, rockMaxHits, durationMs:LEVEL_DURATION_MS,
+      level, stage:stageIndex + 1, step, difficulty, mechanics, openingType, worldCellShare, rockMinHits, rockMaxHits, durationMs:LEVEL_DURATION_MS,
       beatMs:Math.round(1050 - progress * 430 - stageIndex * 45),
       greenLifetimeMs:GREEN_LIFETIME_MS,
       redLifetimeMs:RED_LIFETIME_MS,
@@ -230,10 +234,6 @@
       rockLifetimeMs:ROCK_LIFETIME_MS,
       purpleLifetimeMs:PURPLE_LIFETIME_MS,
       redChance:.08 + progress * .24,
-      blueChance:stageIndex >= 1 ? .08 + progress * .22 : 0,
-      yellowChance:stageIndex >= 2 ? .07 + progress * .18 : 0,
-      rockChance:stageIndex >= 3 ? .06 + progress * .15 : 0,
-      purpleChance:stageIndex >= 4 ? .08 + progress * .22 : 0,
       maxGreens:step >= 8 ? 3 : step >= 4 ? 2 : 1
     };
   }
@@ -283,7 +283,7 @@
     if (level > unlockedThrough || level < 1 || level > 50) return;
     clearRun();
     currentLevel = level; config = getLevelConfig(level); score = 0; misses = 0;
-    playing = true; levelStarted = false; startedAt = 0; token += 1;
+    playing = true; levelStarted = false; startedAt = 0; worldCellAccumulator = 0; token += 1;
     stageLabel.textContent = `Stage ${config.stage} · ${STAGES[config.stage - 1].name}`;
     levelLabel.textContent = `Level ${config.step}`;
     scoreEl.textContent = '0'; timeLeft.textContent = '30'; timerFill.style.transform = 'scaleX(1)';
@@ -372,7 +372,7 @@
     const index=pickCell();if(index<0)return -1;
     const expiry=tutorial?0:setTimeout(()=>expireTarget('purple',index),config.purpleLifetimeMs);
     purpleCells.set(index,{expiry,tutorial});cells[index].classList.add('purple');
-    if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt='Tap to begin';}return index;
+    if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt='Tap to begin';}else{cells[index].classList.add('fading');}return index;
   }
   function clearTarget(type,index) {
     const map={green:activeGreens,red:redCells,blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];
@@ -385,15 +385,26 @@
     graceCells.set(index,performance.now()+300);
     clearTarget(type,index);loseLife();
   }
+  function nextWorldTargetType() {
+    if(config.openingType==='green')return 'green';
+    worldCellAccumulator+=config.worldCellShare;
+    if(worldCellAccumulator+1e-9>=1){worldCellAccumulator-=1;return config.openingType;}
+    return 'green';
+  }
+  function worldTargetMap(type){return{blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];}
+  function spawnActionTarget() {
+    const accumulatorBefore=worldCellAccumulator;
+    const type=nextWorldTargetType();
+    if(type!=='green'&&worldTargetMap(type)?.size>=2){worldCellAccumulator=accumulatorBefore;return -1;}
+    const index=type==='green'?spawnGreen():({blue:spawnBlue,yellow:spawnYellow,rock:spawnRock,purple:spawnPurple}[type]?.()??-1);
+    if(index<0)worldCellAccumulator=accumulatorBefore;
+    return index;
+  }
   function nextCycle() {
     if(!playing||!levelStarted)return;
-    const greenCount=config.maxGreens===1?1:Math.random()<(.15+config.step*.055)?config.maxGreens:1;
-    for(let i=0;i<greenCount;i++)spawnGreen();
+    const targetCount=config.maxGreens===1?1:Math.random()<(.15+config.step*.055)?config.maxGreens:1;
+    for(let i=0;i<targetCount;i++)spawnActionTarget();
     if(Math.random()<config.redChance)spawnRed();
-    if(config.mechanics.includes('blue')&&Math.random()<config.blueChance)spawnBlue();
-    if(config.mechanics.includes('yellow')&&yellowCells.size===0&&Math.random()<config.yellowChance)spawnYellow();
-    if(config.mechanics.includes('rock')&&rockCells.size===0&&Math.random()<config.rockChance)spawnRock();
-    if(config.mechanics.includes('purple')&&purpleCells.size===0&&Math.random()<config.purpleChance)spawnPurple();
     cycleTimer=setTimeout(nextCycle,config.beatMs);
   }
   function resolveSuccess(type,index) {
@@ -433,11 +444,12 @@
   function unlockThroughForTest(level){unlockedThrough=Math.max(1,Math.min(50,level));renderMap();}
   function spawnForTest(type){return({green:spawnGreen,red:spawnRed,blue:spawnBlue,yellow:spawnYellow,rock:spawnRock,purple:spawnPurple}[type]||(()=>-1))();}
   function clearTargetsForTest(){clearTargets();graceCells.clear();}
+  function worldMixSequenceForTest(count){const saved=worldCellAccumulator;worldCellAccumulator=0;const sequence=Array.from({length:count},()=>nextWorldTargetType());worldCellAccumulator=saved;return sequence;}
   function getState(){return{screen,level:currentLevel,playing,levelStarted,onboarding,onboardingType,score,misses,active:[...activeGreens.keys()],red:[...redCells.keys()],blue:[...blueCells.entries()].map(([index,item])=>({index,direction:item.direction,tutorial:item.tutorial})),yellow:[...yellowCells.keys()],rock:[...rockCells.entries()].map(([index,item])=>({index,hits:item.hits,tutorial:item.tutorial})),purple:[...purpleCells.keys()],unlockedThrough};}
 
   mapBack.addEventListener('click',returnToMap);
   renderMap();
-  window.__mookLevels={getLevelConfig,getState,selectLevel,tap,resolveSwipe,beginHold,endHold,hitRock,finishLevelForTest,unlockThroughForTest,returnToMap,spawnForTest,expireForTest:expireTarget,clearTargetsForTest,pauseForTest:()=>clearTimeout(cycleTimer)};
+  window.__mookLevels={getLevelConfig,getState,selectLevel,tap,resolveSwipe,beginHold,endHold,hitRock,finishLevelForTest,unlockThroughForTest,returnToMap,spawnForTest,expireForTest:expireTarget,clearTargetsForTest,worldMixSequenceForTest,pauseForTest:()=>clearTimeout(cycleTimer)};
 </script>
 </body>
 </html>

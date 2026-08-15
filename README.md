@@ -10,6 +10,8 @@ A separate level-based edition of Mook. The original endless score-chaser remain
 - Every stage opens with a hands-on tutorial that waits for the player
 - Every level starts with its stage mechanic: green tap, blue swipe, yellow hold, or three-hit rock
 - Difficulty rises across each set of 10 levels
+- The active world mechanic rises from 10% of action cells in Level 1 to 33% in Level 10
+- World cells use a paced quota rather than pure chance, preventing entire rounds without the featured mechanic
 - Green, red, and blue cells keep a two-second response window
 - Yellow holds allow three seconds; rocks allow four seconds
 - At most four targets can occupy the eight-cell board, with no more than three greens
