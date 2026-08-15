@@ -4,13 +4,13 @@ A separate level-based edition of Mook. The original endless score-chaser remain
 
 ## Structure
 
-- 5 themed stages with 10 levels each
+- 7 themed stages with 10 levels each
 - 30-second levels
 - Persistent unlock progress in the browser
-- Every stage opens with a hands-on tutorial that waits for the player
-- Every level starts with its stage mechanic: green tap, blue swipe, yellow hold, or three-hit rock
+- Every level opens with a hands-on world-specific interaction and waits for the player
+- Openers progress through green tap, blue swipe, yellow hold, three-hit rock, purple tap, opposite red tap, and quantum red-to-green change
 - Difficulty rises across each set of 10 levels
-- The active world mechanic rises from 10% of action cells in Level 1 to 33% in Level 10
+- In Worlds 2–5, the featured mechanic rises from 10% of action cells in Level 1 to 33% in Level 10
 - World cells use a paced quota rather than pure chance, preventing entire rounds without the featured mechanic
 - Green, red, and blue cells keep a two-second response window
 - Yellow holds allow three seconds; rocks allow four seconds
@@ -22,6 +22,8 @@ A separate level-based edition of Mook. The original endless score-chaser remain
 - Stage 4: adds three-hit rocks
 - Stage 4 Levels 5–9 vary regular rocks from two to four hits; Level 10 can also produce five-hit rocks
 - Stage 5: adds one-second purple tap cells; every level waits on a purple opener before its timer starts
+- Stage 6: Reverse Realm swaps green/red behavior and requires swiping opposite blue arrows
+- Stage 7: Quantum Flux flips green/red cells and arrow directions after one second; rocks hide their strength until the first hit
 
 ## Run locally
 

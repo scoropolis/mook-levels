@@ -13,12 +13,12 @@ let browser;
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await page.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
 
-  assert.equal(await page.locator('.level-node').count(), 50, 'world map should render 50 levels');
+  assert.equal(await page.locator('.level-node').count(), 70, 'world map should render 70 levels');
   assert.equal(await page.locator('.level-node.unlocked').count(), 1, 'only level one starts unlocked');
   assert.match(await page.locator('#mapTitle').textContent(), /Green Valley/);
 
-  const configs = await page.evaluate(() => Array.from({ length: 50 }, (_, index) => window.__mookLevels.getLevelConfig(index + 1)));
-  for (let stage = 0; stage < 5; stage++) {
+  const configs = await page.evaluate(() => Array.from({ length: 70 }, (_, index) => window.__mookLevels.getLevelConfig(index + 1)));
+  for (let stage = 0; stage < 7; stage++) {
     const group = configs.slice(stage * 10, stage * 10 + 10);
     for (let i = 1; i < group.length; i++) {
       assert.ok(group[i].difficulty > group[i - 1].difficulty, `stage ${stage + 1} difficulty should increase`);
@@ -40,6 +40,8 @@ let browser;
   assert.equal(configs.slice(20, 30).every(config => config.openingType === 'yellow'), true);
   assert.equal(configs.slice(30, 40).every(config => config.openingType === 'rock'), true);
   assert.equal(configs.slice(40, 50).every(config => config.openingType === 'purple'), true);
+  assert.equal(configs.slice(50, 60).every(config => config.openingType === 'opposite' && config.mode === 'opposite'), true);
+  assert.equal(configs.slice(60, 70).every(config => config.openingType === 'quantum' && config.mode === 'quantum'), true);
   assert.equal(configs.slice(40, 50).every(config => config.purpleLifetimeMs === 1000), true);
   assert.equal(configs.slice(30, 34).every(config => config.rockMinHits === 3 && config.rockMaxHits === 3), true);
   assert.equal(configs.slice(34, 39).every(config => config.rockMinHits === 2 && config.rockMaxHits === 4), true);
@@ -216,6 +218,87 @@ let browser;
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.purple.length, 0);
   assert.equal(state.misses, missesBeforePurpleExpiry + 1, 'a regular purple target should expire after one second');
+
+  // World 6: red is the positive tap, green is the trap, and arrows require the opposite swipe.
+  await page.evaluate(() => window.__mookLevels.returnToMap());
+  await page.evaluate(() => window.__mookLevels.unlockThroughForTest(51));
+  await page.click('.level-node[data-level="51"]', { force: true });
+  state = await page.evaluate(() => window.__mookLevels.getState());
+  assert.equal(state.onboardingType, 'opposite');
+  assert.equal(state.active.length, 1);
+  assert.equal(await page.evaluate(index => document.querySelectorAll('.cell')[index].classList.contains('red'), state.active[0]), true);
+  await page.evaluate(index => window.__mookLevels.tap(index), state.active[0]);
+  assert.equal((await page.evaluate(() => window.__mookLevels.getState())).levelStarted, true);
+  await wait(320);
+  await page.evaluate(() => { window.__mookLevels.pauseForTest(); window.__mookLevels.clearTargetsForTest(); });
+  const oppositePositive = await page.evaluate(() => window.__mookLevels.spawnForTest('green'));
+  assert.equal(await page.evaluate(index => document.querySelectorAll('.cell')[index].classList.contains('red'), oppositePositive), true);
+  const scoreBeforeOppositeTap = (await page.evaluate(() => window.__mookLevels.getState())).score;
+  await page.evaluate(index => window.__mookLevels.tap(index), oppositePositive);
+  assert.equal((await page.evaluate(() => window.__mookLevels.getState())).score, scoreBeforeOppositeTap + 1);
+  await wait(320);
+  await page.evaluate(() => window.__mookLevels.clearTargetsForTest());
+  const oppositeTrap = await page.evaluate(() => window.__mookLevels.spawnForTest('red'));
+  assert.equal(await page.evaluate(index => document.querySelectorAll('.cell')[index].classList.contains('green'), oppositeTrap), true);
+  const missesBeforeOppositeTrap = (await page.evaluate(() => window.__mookLevels.getState())).misses;
+  await page.evaluate(index => window.__mookLevels.tap(index), oppositeTrap);
+  assert.equal((await page.evaluate(() => window.__mookLevels.getState())).misses, missesBeforeOppositeTrap + 1);
+  await page.evaluate(() => window.__mookLevels.clearTargetsForTest());
+  await page.evaluate(() => window.__mookLevels.spawnForTest('blue'));
+  const oppositeBlue = (await page.evaluate(() => window.__mookLevels.getState())).blue[0];
+  const directionOpposites = { left: 'right', right: 'left', up: 'down', down: 'up' };
+  assert.equal(oppositeBlue.direction, directionOpposites[oppositeBlue.shownDirection]);
+
+  // World 7: colors and arrows physically flip at one second; rocks hide their strength until the first hit.
+  await page.evaluate(() => window.__mookLevels.returnToMap());
+  await page.evaluate(() => window.__mookLevels.unlockThroughForTest(61));
+  await page.click('.level-node[data-level="61"]', { force: true });
+  state = await page.evaluate(() => window.__mookLevels.getState());
+  assert.equal(state.onboardingType, 'quantum');
+  assert.equal(state.red.length, 1);
+  const quantumOpeningIndex = state.red[0];
+  assert.equal(await page.evaluate(index => document.querySelectorAll('.cell')[index].classList.contains('red'), quantumOpeningIndex), true);
+  await wait(1300);
+  state = await page.evaluate(() => window.__mookLevels.getState());
+  assert.ok(state.active.includes(quantumOpeningIndex));
+  assert.equal(await page.evaluate(index => document.querySelectorAll('.cell')[index].classList.contains('green'), quantumOpeningIndex), true);
+  await page.evaluate(index => window.__mookLevels.tap(index), quantumOpeningIndex);
+  assert.equal((await page.evaluate(() => window.__mookLevels.getState())).levelStarted, true);
+  await wait(320);
+  await page.evaluate(() => { window.__mookLevels.pauseForTest(); window.__mookLevels.clearTargetsForTest(); });
+
+  const quantumGreen = await page.evaluate(() => window.__mookLevels.spawnForTest('green'));
+  await wait(1300);
+  state = await page.evaluate(() => window.__mookLevels.getState());
+  assert.ok(state.red.includes(quantumGreen));
+  assert.equal(await page.evaluate(index => document.querySelectorAll('.cell')[index].classList.contains('red'), quantumGreen), true);
+  await page.evaluate(() => window.__mookLevels.clearTargetsForTest());
+
+  const quantumRed = await page.evaluate(() => window.__mookLevels.spawnForTest('red'));
+  await wait(1300);
+  state = await page.evaluate(() => window.__mookLevels.getState());
+  assert.ok(state.active.includes(quantumRed));
+  assert.equal(await page.evaluate(index => document.querySelectorAll('.cell')[index].classList.contains('green'), quantumRed), true);
+  await page.evaluate(() => window.__mookLevels.clearTargetsForTest());
+
+  await page.evaluate(() => window.__mookLevels.spawnForTest('blue'));
+  const quantumBlueBefore = (await page.evaluate(() => window.__mookLevels.getState())).blue[0];
+  await wait(1300);
+  const quantumBlueAfter = (await page.evaluate(() => window.__mookLevels.getState())).blue[0];
+  assert.equal(quantumBlueAfter.shownDirection, directionOpposites[quantumBlueBefore.shownDirection]);
+  assert.equal(quantumBlueAfter.direction, quantumBlueAfter.shownDirection);
+  await page.evaluate(() => window.__mookLevels.clearTargetsForTest());
+
+  const quantumRock = await page.evaluate(() => window.__mookLevels.spawnForTest('rock'));
+  state = await page.evaluate(() => window.__mookLevels.getState());
+  const hiddenRock = state.rock.find(rock => rock.index === quantumRock);
+  assert.equal(hiddenRock.hidden, true);
+  assert.equal(await page.evaluate(index => document.querySelectorAll('.cell')[index].dataset.hits, quantumRock), '?');
+  await page.evaluate(index => window.__mookLevels.hitRock(index), quantumRock);
+  const revealedRock = (await page.evaluate(() => window.__mookLevels.getState())).rock.find(rock => rock.index === quantumRock);
+  assert.equal(revealedRock.hidden, false);
+  assert.equal(revealedRock.hits, hiddenRock.hits - 1);
+  assert.equal(await page.evaluate(index => document.querySelectorAll('.cell')[index].dataset.hits, quantumRock), String(revealedRock.hits));
 
   console.log(JSON.stringify({ ok: true, levels: configs.length, finalState: state }));
 })().catch(error => {

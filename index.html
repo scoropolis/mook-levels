@@ -38,6 +38,8 @@
     .stage-yellow{background:linear-gradient(155deg,#fff4b3,#ffc95d)}
     .stage-rock{background:linear-gradient(155deg,#dce7ec,#82949e)}
     .stage-purple{background:linear-gradient(155deg,#f1dcff,#ad70ef)}
+    .stage-opposite{background:linear-gradient(155deg,#ffb7bb 0 48%,#aef2c6 52% 100%)}
+    .stage-quantum{background:linear-gradient(145deg,#18213f,#693ab7 52%,#32c8d4);color:white}
     .stage-card:after{content:"";position:absolute;width:190px;height:190px;border-radius:50%;right:-80px;bottom:-100px;background:rgba(255,255,255,.2)}
     .stage-head{position:relative;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;margin:0 6px 20px}
     .stage-number{font-size:10px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;opacity:.55}
@@ -98,7 +100,7 @@
 <main class="app">
   <section class="screen map-screen active" id="mapScreen">
     <header class="map-hero">
-      <div class="hero-row"><span class="eyebrow">Level journey</span><span class="world-progress" id="worldProgress">0 / 50</span></div>
+      <div class="hero-row"><span class="eyebrow">Level journey</span><span class="world-progress" id="worldProgress">0 / 70</span></div>
       <div class="map-logo">Mook<span>Worlds</span></div>
       <div class="map-title" id="mapTitle">Green Valley · Level 1 awaits</div>
     </header>
@@ -140,7 +142,9 @@
     { name:'Sky Current', icon:'↗', className:'stage-blue', mechanic:'blue', description:'Swipe the arrows' },
     { name:'Sunhold Sands', icon:'☀', className:'stage-yellow', mechanic:'yellow', description:'Press and hold' },
     { name:'Stone Summit', icon:'◆', className:'stage-rock', mechanic:'rock', description:'Break the rocks' },
-    { name:'Violet Rush', icon:'✦', className:'stage-purple', mechanic:'purple', description:'One-second reactions' }
+    { name:'Violet Rush', icon:'✦', className:'stage-purple', mechanic:'purple', description:'One-second reactions' },
+    { name:'Reverse Realm', icon:'⇄', className:'stage-opposite', mechanic:'opposite', description:'Everything means the opposite' },
+    { name:'Quantum Flux', icon:'?', className:'stage-quantum', mechanic:'quantum', description:'Rules change mid-cell' }
   ];
   const LEVEL_DURATION_MS = 30000;
   const SWIPE_THRESHOLD = 32;
@@ -152,6 +156,9 @@
   const YELLOW_LIFETIME_MS = 3000;
   const ROCK_LIFETIME_MS = 4000;
   const PURPLE_LIFETIME_MS = 1000;
+  const DIRECTIONS = ['up','right','down','left'];
+  const ARROWS = {up:'↑',right:'→',down:'↓',left:'←'};
+  const OPPOSITE_DIRECTIONS = {up:'down',down:'up',left:'right',right:'left'};
   const board = document.querySelector('#board');
   const mapScreen = document.querySelector('#mapScreen');
   const gameScreen = document.querySelector('#gameScreen');
@@ -174,8 +181,9 @@
   const toast = document.querySelector('#toast');
   const lifeEls = [...document.querySelectorAll('.life')];
 
-  let unlockedThrough = loadNumber('mook-worlds-unlocked', 1, 1, 50);
+  let unlockedThrough = loadNumber('mook-worlds-unlocked', 1, 1, 70);
   let completed = loadObject('mook-worlds-completed');
+  if(Object.prototype.hasOwnProperty.call(completed,'50')&&unlockedThrough<51)unlockedThrough=51;
   let currentLevel = 0;
   let config = null;
   let screen = 'map';
@@ -190,6 +198,7 @@
   let levelRaf = 0;
   let token = 0;
   let worldCellAccumulator = 0;
+  let modePoolCursor = 0;
   let activeGreens = new Map();
   let redCells = new Map();
   let blueCells = new Map();
@@ -226,10 +235,11 @@
     const progress = (step - 1) / 9;
     const worldCellShare = .10 + progress * .23;
     const openingType = STAGES[stageIndex].mechanic;
+    const mode = stageIndex === 5 ? 'opposite' : stageIndex === 6 ? 'quantum' : 'normal';
     const rockMinHits = stageIndex < 3 || step < 5 ? 3 : 2;
     const rockMaxHits = stageIndex < 3 || step < 5 ? 3 : step === 10 ? 5 : 4;
     return {
-      level, stage:stageIndex + 1, step, difficulty, mechanics, openingType, worldCellShare, rockMinHits, rockMaxHits, durationMs:LEVEL_DURATION_MS,
+      level, stage:stageIndex + 1, step, difficulty, mechanics, openingType, mode, worldCellShare, rockMinHits, rockMaxHits, durationMs:LEVEL_DURATION_MS,
       beatMs:Math.round(1050 - progress * 430 - stageIndex * 45),
       greenLifetimeMs:GREEN_LIFETIME_MS,
       redLifetimeMs:RED_LIFETIME_MS,
@@ -244,9 +254,9 @@
 
   function renderMap() {
     const completeCount = Object.keys(completed).filter(level => completed[level]).length;
-    worldProgress.textContent = `${completeCount} / 50`;
-    const stage = STAGES[stageFor(Math.min(unlockedThrough,50))];
-    mapTitle.textContent = completeCount >= 50 ? 'All worlds cleared' : `${stage.name} · Level ${unlockedThrough} awaits`;
+    worldProgress.textContent = `${completeCount} / 70`;
+    const stage = STAGES[stageFor(Math.min(unlockedThrough,70))];
+    mapTitle.textContent = completeCount >= 70 ? 'All worlds cleared' : `${stage.name} · Level ${unlockedThrough} awaits`;
     mapWrap.innerHTML = '';
     STAGES.forEach((item, stageIndex) => {
       const card = document.createElement('section');
@@ -284,10 +294,10 @@
     gameScreen.classList.toggle('active', next === 'game');
   }
   function selectLevel(level) {
-    if (level > unlockedThrough || level < 1 || level > 50) return;
+    if (level > unlockedThrough || level < 1 || level > 70) return;
     clearRun();
     currentLevel = level; config = getLevelConfig(level); score = 0; misses = 0;
-    playing = true; levelStarted = false; startedAt = 0; worldCellAccumulator = 0; token += 1;
+    playing = true; levelStarted = false; startedAt = 0; worldCellAccumulator = 0; modePoolCursor = 0; token += 1;
     stageLabel.textContent = `Stage ${config.stage} · ${STAGES[config.stage - 1].name}`;
     levelLabel.textContent = `Level ${config.step}`;
     scoreEl.textContent = '0'; timeLeft.textContent = '30'; timerFill.style.transform = 'scaleX(1)';
@@ -304,12 +314,16 @@
       : type === 'yellow' ? 'Hold for one second to start'
       : type === 'rock' ? 'Tap three times to break it and start'
       : type === 'purple' ? 'Tap the purple cell to start'
+      : type === 'opposite' ? 'Opposite rules: tap the red cell to start'
+      : type === 'quantum' ? 'Watch it change—tap when it turns green'
       : 'Tap the first green to start';
   }
   function startClock() {
     if (levelStarted || !playing) return;
     onboarding = false; levelStarted = true; startedAt = performance.now();
-    mission.textContent = config.stage === 1 ? 'Tap green. Avoid red.' : `Clear Stage ${config.stage} for 30 seconds`;
+    mission.textContent = config.mode === 'opposite' ? 'Tap red. Avoid green. Swipe opposite the arrow.'
+      : config.mode === 'quantum' ? 'Colors and arrows switch after one second.'
+      : config.stage === 1 ? 'Tap green. Avoid red.' : `Clear Stage ${config.stage} for 30 seconds`;
     levelRaf = requestAnimationFrame(tickLevel);
     cycleTimer = setTimeout(nextCycle, Math.min(600, config.beatMs));
   }
@@ -335,28 +349,51 @@
     else if (type === 'yellow') spawnYellow(true);
     else if (type === 'rock') spawnRock(true);
     else if (type === 'purple') spawnPurple(true);
+    else if (type === 'quantum') spawnQuantumTutorial();
     else spawnGreen(true);
+  }
+  function finishColorTarget(index){if(activeGreens.has(index))expireTarget('green',index);else if(redCells.has(index))clearTarget('red',index);}
+  function flipQuantumColor(index){
+    if(activeGreens.has(index)){
+      const item=activeGreens.get(index);activeGreens.delete(index);redCells.set(index,item);
+      cells[index].classList.remove('green');cells[index].classList.add('red');
+    }else if(redCells.has(index)){
+      const item=redCells.get(index);redCells.delete(index);activeGreens.set(index,item);
+      cells[index].classList.remove('red');cells[index].classList.add('green');
+    }
+  }
+  function spawnQuantumTutorial(){
+    const index=pickCell();if(index<0)return -1;
+    const item={expiry:0,tutorial:true,switchTimer:0};redCells.set(index,item);
+    cells[index].classList.add('red','tutorial');cells[index].dataset.prompt='Wait for green';
+    item.switchTimer=setTimeout(()=>{if(!redCells.has(index))return;redCells.delete(index);activeGreens.set(index,item);item.switchTimer=0;cells[index].classList.remove('red');cells[index].classList.add('green');cells[index].dataset.prompt='Tap green to begin';},1000);
+    return index;
   }
   function spawnGreen(tutorial=false) {
     if(!tutorial&&activeGreens.size>=MAX_ACTIVE_GREENS)return -1;
     const index = pickCell(); if (index < 0) return -1;
-    const expiry = tutorial ? 0 : setTimeout(()=>expireTarget('green',index),config.greenLifetimeMs);
-    activeGreens.set(index,{expiry,tutorial});
-    cells[index].classList.add('green');
-    if (tutorial) { cells[index].classList.add('tutorial'); cells[index].dataset.prompt='Tap to begin'; }
+    const expiry = tutorial ? 0 : setTimeout(()=>finishColorTarget(index),config.greenLifetimeMs);
+    const item={expiry,tutorial,switchTimer:0};activeGreens.set(index,item);
+    cells[index].classList.add(config.mode==='opposite'?'red':'green');
+    if(config.mode==='quantum'&&!tutorial)item.switchTimer=setTimeout(()=>flipQuantumColor(index),1000);
+    if (tutorial) { cells[index].classList.add('tutorial'); cells[index].dataset.prompt=config.mode==='opposite'?'Tap red to begin':'Tap to begin'; }
     return index;
   }
   function spawnRed() {
     const index = pickCell(); if(index<0)return -1;
-    const expiry=setTimeout(()=>clearTarget('red',index),config.redLifetimeMs);
-    redCells.set(index,{expiry}); cells[index].classList.add('red'); return index;
+    const expiry=setTimeout(()=>finishColorTarget(index),config.redLifetimeMs);
+    const item={expiry,tutorial:false,switchTimer:0};redCells.set(index,item);cells[index].classList.add(config.mode==='opposite'?'green':'red');
+    if(config.mode==='quantum')item.switchTimer=setTimeout(()=>flipQuantumColor(index),1000);
+    return index;
   }
+  function flipQuantumArrow(index){const item=blueCells.get(index);if(!item)return;item.shownDirection=OPPOSITE_DIRECTIONS[item.shownDirection];item.direction=item.shownDirection;item.switchTimer=0;cells[index].dataset.arrow=ARROWS[item.shownDirection];}
   function spawnBlue(tutorial=false) {
     const index=pickCell();if(index<0)return -1;
-    const directions=['up','right','down','left'];const arrows={up:'↑',right:'→',down:'↓',left:'←'};
-    const direction=directions[Math.floor(Math.random()*4)];
+    const shownDirection=DIRECTIONS[Math.floor(Math.random()*4)];
+    const direction=config.mode==='opposite'?OPPOSITE_DIRECTIONS[shownDirection]:shownDirection;
     const expiry=tutorial?0:setTimeout(()=>expireTarget('blue',index),config.blueLifetimeMs);
-    blueCells.set(index,{expiry,tutorial,direction});cells[index].classList.add('blue');cells[index].dataset.arrow=arrows[direction];
+    const item={expiry,tutorial,direction,shownDirection,switchTimer:0};blueCells.set(index,item);cells[index].classList.add('blue');cells[index].dataset.arrow=ARROWS[shownDirection];
+    if(config.mode==='quantum'&&!tutorial)item.switchTimer=setTimeout(()=>flipQuantumArrow(index),1000);
     if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt=`Swipe ${direction}`;}return index;
   }
   function spawnYellow(tutorial=false) {
@@ -369,7 +406,8 @@
     const index=pickCell();if(index<0)return -1;
     const expiry=tutorial?0:setTimeout(()=>expireTarget('rock',index),config.rockLifetimeMs);
     const hits=tutorial?3:config.rockMinHits+Math.floor(Math.random()*(config.rockMaxHits-config.rockMinHits+1));
-    rockCells.set(index,{expiry,tutorial,hits});cells[index].classList.add('rock');cells[index].dataset.hits=String(hits);
+    const hidden=config.mode==='quantum'&&!tutorial;
+    rockCells.set(index,{expiry,tutorial,hits,hidden});cells[index].classList.add('rock');cells[index].dataset.hits=hidden?'?':String(hits);
     if(tutorial){cells[index].classList.add('tutorial');cells[index].dataset.prompt='Tap 3 times';}return index;
   }
   function spawnPurple(tutorial=false) {
@@ -380,7 +418,7 @@
   }
   function clearTarget(type,index) {
     const map={green:activeGreens,red:redCells,blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];
-    const item=map.get(index);if(item?.expiry)clearTimeout(item.expiry);if(item?.holdTimer)clearTimeout(item.holdTimer);map.delete(index);
+    const item=map.get(index);if(item?.expiry)clearTimeout(item.expiry);if(item?.holdTimer)clearTimeout(item.holdTimer);if(item?.switchTimer)clearTimeout(item.switchTimer);map.delete(index);
     cells[index].className='cell';delete cells[index].dataset.arrow;delete cells[index].dataset.hits;delete cells[index].dataset.prompt;
   }
   function expireTarget(type,index) {
@@ -390,6 +428,10 @@
     clearTarget(type,index);loseLife();
   }
   function nextWorldTargetType() {
+    if(config.mode==='opposite'||config.mode==='quantum'){
+      const pool=['green','blue','yellow','rock','purple'];
+      const type=pool[modePoolCursor%pool.length];modePoolCursor+=1;return type;
+    }
     if(config.openingType==='green')return 'green';
     worldCellAccumulator+=config.worldCellShare;
     if(worldCellAccumulator+1e-9>=1){worldCellAccumulator-=1;return config.openingType;}
@@ -397,11 +439,11 @@
   }
   function worldTargetMap(type){return{blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];}
   function spawnActionTarget() {
-    const accumulatorBefore=worldCellAccumulator;
+    const accumulatorBefore=worldCellAccumulator;const cursorBefore=modePoolCursor;
     const type=nextWorldTargetType();
-    if(type!=='green'&&worldTargetMap(type)?.size>=2){worldCellAccumulator=accumulatorBefore;return -1;}
+    if(type!=='green'&&worldTargetMap(type)?.size>=2){worldCellAccumulator=accumulatorBefore;modePoolCursor=cursorBefore;return -1;}
     const index=type==='green'?spawnGreen():({blue:spawnBlue,yellow:spawnYellow,rock:spawnRock,purple:spawnPurple}[type]?.()??-1);
-    if(index<0)worldCellAccumulator=accumulatorBefore;
+    if(index<0){worldCellAccumulator=accumulatorBefore;modePoolCursor=cursorBefore;}
     return index;
   }
   function nextCycle() {
@@ -413,7 +455,7 @@
   }
   function resolveSuccess(type,index) {
     const map={green:activeGreens,blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];const item=map.get(index);const wasTutorial=item?.tutorial;
-    if(item?.expiry)clearTimeout(item.expiry);if(item?.holdTimer)clearTimeout(item.holdTimer);map.delete(index);resolving.add(index);
+    if(item?.expiry)clearTimeout(item.expiry);if(item?.holdTimer)clearTimeout(item.holdTimer);if(item?.switchTimer)clearTimeout(item.switchTimer);map.delete(index);resolving.add(index);
     cells[index].classList.add('hit');score+=1;scoreEl.textContent=String(score);showToast(wasTutorial?'GO!':'+1');
     setTimeout(()=>{resolving.delete(index);clearCellVisual(index);},280);
     if(wasTutorial)startClock();
@@ -424,7 +466,7 @@
     if(rockCells.has(index)){hitRock(index);return;}
     if(blueCells.has(index)){wrong(index);if(!blueCells.get(index)?.tutorial){clearTarget('blue',index);}loseLife();return;}
     if(yellowCells.has(index)){beginHold(index);setTimeout(()=>endHold(index),0);return;}
-    if(redCells.has(index)){clearTarget('red',index);wrong(index);loseLife();return;}
+    if(redCells.has(index)){if(redCells.get(index)?.tutorial){wrong(index);return;}clearTarget('red',index);wrong(index);loseLife();return;}
     if(purpleCells.has(index)){resolveSuccess('purple',index);return;}
     if(activeGreens.has(index)){resolveSuccess('green',index);return;}
     const graceUntil=graceCells.get(index)||0;
@@ -432,7 +474,7 @@
     graceCells.delete(index);
     if(levelStarted){wrong(index);loseLife();}
   }
-  function hitRock(index){const rock=rockCells.get(index);if(!rock)return;rock.hits-=1;cells[index].dataset.hits=String(rock.hits);showToast(rock.hits?`${rock.hits} left`:'Break!');if(rock.hits<=0)resolveSuccess('rock',index);}
+  function hitRock(index){const rock=rockCells.get(index);if(!rock)return;rock.hidden=false;rock.hits-=1;cells[index].dataset.hits=String(rock.hits);showToast(rock.hits?`${rock.hits} left`:'Break!');if(rock.hits<=0)resolveSuccess('rock',index);}
   function beginHold(index){const yellow=yellowCells.get(index);if(!yellow||yellow.holding)return;yellow.holding=true;cells[index].classList.add('holding');yellow.holdTimer=setTimeout(()=>resolveSuccess('yellow',index),1000);}
   function endHold(index){const yellow=yellowCells.get(index);if(!yellow||!yellow.holding)return;clearTimeout(yellow.holdTimer);yellow.holding=false;yellow.holdTimer=0;cells[index].classList.remove('holding');}
   function resolveSwipe(index,dx,dy){const blue=blueCells.get(index);if(!blue){tap(index);return;}const far=Math.max(Math.abs(dx),Math.abs(dy))>=SWIPE_THRESHOLD;const direction=!far?'tap':Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');if(direction===blue.direction)resolveSuccess('blue',index);else{wrong(index);if(!blue.tutorial)clearTarget('blue',index);loseLife();}}
@@ -442,14 +484,14 @@
   function showToast(text){toast.textContent=text;toast.classList.remove('show');void toast.offsetWidth;toast.classList.add('show');}
   function clearTargets(){['green','red','blue','yellow','rock','purple'].forEach(type=>{const map={green:activeGreens,red:redCells,blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];[...map.keys()].forEach(index=>clearTarget(type,index));});resolving.clear();cells.forEach((_,index)=>clearCellVisual(index));}
   function clearRun(){playing=false;clearTimeout(cycleTimer);cancelAnimationFrame(levelRaf);clearTargets();graceCells.clear();}
-  function finishLevel(success,immediateMap=false){if(!playing)return;const finishedLevel=currentLevel;clearRun();if(success){completed[finishedLevel]=Math.max(Number(completed[finishedLevel])||0,score);unlockedThrough=Math.max(unlockedThrough,Math.min(50,finishedLevel+1));persistProgress();resultBadge.textContent='✓';resultTitle.textContent='Level clear!';resultCopy.textContent=finishedLevel===50?'You cleared every Mook world.':`Level ${localLevel(Math.min(50,finishedLevel+1))} is now open.`;resultPrimary.textContent='World map';resultSecondary.textContent='Play again';}else{resultBadge.textContent='×';resultTitle.textContent='Try again';resultCopy.textContent='Four misses. Learn the rhythm and take another run.';resultPrimary.textContent='Retry level';resultSecondary.textContent='World map';}renderMap();if(immediateMap){returnToMap();return;}levelOverlay.classList.remove('hidden');resultPrimary.onclick=()=>success?returnToMap():selectLevel(finishedLevel);resultSecondary.onclick=()=>success?selectLevel(finishedLevel):returnToMap();if(success)setTimeout(()=>{if(!playing&&!levelOverlay.classList.contains('hidden'))returnToMap();},1800);}
+  function finishLevel(success,immediateMap=false){if(!playing)return;const finishedLevel=currentLevel;clearRun();if(success){completed[finishedLevel]=Math.max(Number(completed[finishedLevel])||0,score);unlockedThrough=Math.max(unlockedThrough,Math.min(70,finishedLevel+1));persistProgress();resultBadge.textContent='✓';resultTitle.textContent='Level clear!';resultCopy.textContent=finishedLevel===70?'You cleared every Mook world.':`Level ${localLevel(Math.min(70,finishedLevel+1))} is now open.`;resultPrimary.textContent='World map';resultSecondary.textContent='Play again';}else{resultBadge.textContent='×';resultTitle.textContent='Try again';resultCopy.textContent='Four misses. Learn the rhythm and take another run.';resultPrimary.textContent='Retry level';resultSecondary.textContent='World map';}renderMap();if(immediateMap){returnToMap();return;}levelOverlay.classList.remove('hidden');resultPrimary.onclick=()=>success?returnToMap():selectLevel(finishedLevel);resultSecondary.onclick=()=>success?selectLevel(finishedLevel):returnToMap();if(success)setTimeout(()=>{if(!playing&&!levelOverlay.classList.contains('hidden'))returnToMap();},1800);}
   function returnToMap(){clearRun();levelOverlay.classList.add('hidden');renderMap();showScreen('map');const current=document.querySelector('.level-node.current');current?.scrollIntoView({block:'center',behavior:'smooth'});}
   function finishLevelForTest(success){finishLevel(success,true);}
-  function unlockThroughForTest(level){unlockedThrough=Math.max(1,Math.min(50,level));renderMap();}
+  function unlockThroughForTest(level){unlockedThrough=Math.max(1,Math.min(70,level));renderMap();}
   function spawnForTest(type){return({green:spawnGreen,red:spawnRed,blue:spawnBlue,yellow:spawnYellow,rock:spawnRock,purple:spawnPurple}[type]||(()=>-1))();}
   function clearTargetsForTest(){clearTargets();graceCells.clear();}
-  function worldMixSequenceForTest(count){const saved=worldCellAccumulator;worldCellAccumulator=0;const sequence=Array.from({length:count},()=>nextWorldTargetType());worldCellAccumulator=saved;return sequence;}
-  function getState(){return{screen,level:currentLevel,playing,levelStarted,onboarding,onboardingType,score,misses,active:[...activeGreens.keys()],red:[...redCells.keys()],blue:[...blueCells.entries()].map(([index,item])=>({index,direction:item.direction,tutorial:item.tutorial})),yellow:[...yellowCells.keys()],rock:[...rockCells.entries()].map(([index,item])=>({index,hits:item.hits,tutorial:item.tutorial})),purple:[...purpleCells.keys()],unlockedThrough};}
+  function worldMixSequenceForTest(count){const saved=worldCellAccumulator,savedCursor=modePoolCursor;worldCellAccumulator=0;modePoolCursor=0;const sequence=Array.from({length:count},()=>nextWorldTargetType());worldCellAccumulator=saved;modePoolCursor=savedCursor;return sequence;}
+  function getState(){return{screen,level:currentLevel,playing,levelStarted,onboarding,onboardingType,score,misses,active:[...activeGreens.keys()],red:[...redCells.keys()],blue:[...blueCells.entries()].map(([index,item])=>({index,direction:item.direction,shownDirection:item.shownDirection,tutorial:item.tutorial})),yellow:[...yellowCells.keys()],rock:[...rockCells.entries()].map(([index,item])=>({index,hits:item.hits,hidden:Boolean(item.hidden),tutorial:item.tutorial})),purple:[...purpleCells.keys()],unlockedThrough};}
 
   mapBack.addEventListener('click',returnToMap);
   renderMap();
