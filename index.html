@@ -228,23 +228,39 @@
     if (stageIndex >= 2) mechanics.push('yellow');
     if (stageIndex >= 3) mechanics.push('rock');
     if (stageIndex >= 4) mechanics.push('purple');
+    if (stageIndex === 5) {
+      mechanics.length=0;mechanics.push('green','red');
+      if(step>=3)mechanics.push('blue');
+      if(step>=6)mechanics.push('yellow');
+      if(step>=7)mechanics.push('rock');
+      if(step>=8)mechanics.push('purple');
+    }
     const progress = (step - 1) / 9;
     const worldCellShare = .10 + progress * .23;
-    const openingType = STAGES[stageIndex].mechanic;
+    let openingType = STAGES[stageIndex].mechanic;
+    if(stageIndex===5)openingType=step<=2?'opposite':step<=5?'blue':step===6?'yellow':step===7?'rock':step===8?'purple':'opposite';
     const mode = stageIndex === 5 ? 'opposite' : stageIndex === 6 ? 'quantum' : 'normal';
     const rockMinHits = stageIndex < 3 || step < 5 ? 3 : 2;
     const rockMaxHits = stageIndex < 3 || step < 5 ? 3 : step === 10 ? 5 : 4;
+    let beatMs=Math.round(1050 - progress * 430 - stageIndex * 45);
+    let redChance=.08 + progress * .24;
+    let maxGreens=step >= 8 ? 3 : step >= 4 ? 2 : 1;
+    if(stageIndex===5){
+      beatMs=[1200,950,1150,950,780,1000,900,1050,850,680][step-1];
+      redChance=[.10,.20,.10,.18,.26,.16,.20,.14,.22,.30][step-1];
+      maxGreens=[1,2,1,2,3,2,2,1,2,3][step-1];
+    }
     return {
       level, stage:stageIndex + 1, step, difficulty, mechanics, openingType, mode, worldCellShare, rockMinHits, rockMaxHits, durationMs:LEVEL_DURATION_MS,
-      beatMs:Math.round(1050 - progress * 430 - stageIndex * 45),
+      beatMs,
       greenLifetimeMs:GREEN_LIFETIME_MS,
       redLifetimeMs:RED_LIFETIME_MS,
       blueLifetimeMs:BLUE_LIFETIME_MS,
       yellowLifetimeMs:YELLOW_LIFETIME_MS,
       rockLifetimeMs:ROCK_LIFETIME_MS,
       purpleLifetimeMs:PURPLE_LIFETIME_MS,
-      redChance:.08 + progress * .24,
-      maxGreens:step >= 8 ? 3 : step >= 4 ? 2 : 1
+      redChance,
+      maxGreens
     };
   }
 
@@ -306,7 +322,7 @@
     spawnTutorial(onboardingType);
   }
   function onboardingMessage(type) {
-    return type === 'blue' ? 'Swipe the arrow to start'
+    return type === 'blue' ? (config.mode==='opposite'?'Swipe opposite the arrow to start':'Swipe the arrow to start')
       : type === 'yellow' ? 'Hold for one second to start'
       : type === 'rock' ? 'Tap three times to break it and start'
       : type === 'purple' ? 'Tap the purple cell to start'
@@ -425,13 +441,14 @@
   }
   function nextWorldTargetType() {
     if(config.mode==='opposite'||config.mode==='quantum'){
-      const pool=['green','blue','yellow','rock','purple'];
+      const pool=config.mechanics.filter(type=>type!=='red');
       const type=pool[modePoolCursor%pool.length];modePoolCursor+=1;return type;
     }
     if(config.openingType==='green')return 'green';
     worldCellAccumulator+=config.worldCellShare;
     if(worldCellAccumulator+1e-9>=1){worldCellAccumulator-=1;return config.openingType;}
-    return 'green';
+    const supportingTypes=config.mechanics.filter(type=>type!=='red'&&type!==config.openingType);
+    const type=supportingTypes[modePoolCursor%supportingTypes.length]||'green';modePoolCursor+=1;return type;
   }
   function worldTargetMap(type){return{blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];}
   function spawnActionTarget() {
