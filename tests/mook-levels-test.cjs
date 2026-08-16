@@ -11,6 +11,10 @@ let browser;
   await wait(450);
   browser = await chromium.launch({ channel: 'chrome', headless: true });
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  await page.addInitScript(() => {
+    window.__vibrations = [];
+    Object.defineProperty(navigator, 'vibrate', { configurable: true, value: pattern => { window.__vibrations.push(pattern); return true; } });
+  });
   await page.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
 
   assert.equal(await page.locator('.level-node').count(), 70, 'world map should render 70 levels');
@@ -105,7 +109,7 @@ let browser;
   assert.equal(state.music.muted, false);
   await page.click('#soundToggle');
   assert.equal((await page.evaluate(() => window.__mookLevels.getState())).music.muted, true);
-  assert.equal(await page.locator('#soundToggle').getAttribute('aria-label'), 'Turn soundtrack on');
+  assert.equal(await page.locator('#soundToggle').getAttribute('aria-label'), 'Turn game audio on');
   await page.click('#soundToggle');
   assert.equal((await page.evaluate(() => window.__mookLevels.getState())).music.muted, false);
   const selectionGuard=await page.evaluate(()=>{
@@ -121,6 +125,9 @@ let browser;
   await page.evaluate(index => window.__mookLevels.tap(index), state.active[0]);
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.levelStarted, true, 'first interaction should start the level timer');
+  assert.ok(state.music.feedbackCount >= 1, 'hitting a cell should play a sound effect');
+  assert.ok(state.music.hapticCount >= 1, 'hitting a cell should request haptic feedback');
+  assert.deepEqual(await page.evaluate(() => window.__vibrations[0]), 18);
   const tempoRamp = await page.evaluate(() => {
     const now = performance.now();
     return [window.__mookLevels.soundtrackBpmForTest(now), window.__mookLevels.soundtrackBpmForTest(now + 30000 / .75)];

@@ -248,6 +248,8 @@
   let nextNoteAt = 0;
   let musicRunning = false;
   let musicMuted = loadNumber('mook-worlds-muted',0,0,1)===1;
+  let feedbackCount = 0;
+  let hapticCount = 0;
   let activeGreens = new Map();
   let redCells = new Map();
   let blueCells = new Map();
@@ -276,12 +278,12 @@
   function starsForMisses(value){return Math.max(0,4-Math.max(0,Math.floor(value)));}
   function scaledDelay(value){return value/runTimeScale;}
   function soundtrackBpm(now=performance.now()){
-    if(!config)return 82;
-    const base=Math.max(82,Math.min(134,90000/config.beatMs));
+    if(!config)return 96;
+    const base=Math.max(96,Math.min(148,100000/config.beatMs));
     const progress=levelStarted?Math.max(0,Math.min(1,((now-startedAt)*runTimeScale)/LEVEL_DURATION_MS)):0;
-    return Math.round((base+progress*16)*runTimeScale);
+    return Math.round((base+progress*24)*runTimeScale);
   }
-  function updateSoundButton(){soundToggle.textContent=musicMuted?'♩':'♫';soundToggle.setAttribute('aria-pressed',String(musicMuted));soundToggle.setAttribute('aria-label',musicMuted?'Turn soundtrack on':'Mute soundtrack');}
+  function updateSoundButton(){soundToggle.textContent=musicMuted?'♩':'♫';soundToggle.setAttribute('aria-pressed',String(musicMuted));soundToggle.setAttribute('aria-label',musicMuted?'Turn game audio on':'Mute game audio');}
   function ensureAudio(){
     if(audioContext)return true;
     const AudioCtor=window.AudioContext||window.webkitAudioContext;if(!AudioCtor)return false;
@@ -296,11 +298,28 @@
   }
   function scheduleMusicStep(step,when){
     const roots=[110,123.47,130.81,146.83,164.81,98,116.54];const root=roots[Math.max(0,(config?.stage||1)-1)];
-    const bassPattern=[1,1.5,1.25,1.5],leadPattern=[2,2.5,3,2.25,2,3,2.5,2.25];
-    if(step%4===0)scheduleTone(root*bassPattern[(step/4)%4]/2,when,.22,.12,'sine');
-    if([2,6,10,14].includes(step))scheduleTone(root*leadPattern[(step/2)%8],when,.11,.055,'triangle');
-    if(step===15)scheduleTone(root*4,when,.055,.025,'sine');
+    const melody=[12,16,19,16,14,12,9,null,7,9,12,14,16,14,12,null];
+    const bass=[0,0,5,7];
+    if(step%4===0)scheduleTone(root*Math.pow(2,bass[(step/4)%4]/12)/2,when,.24,.11,'triangle');
+    const semitone=melody[step];if(semitone!==null)scheduleTone(root*Math.pow(2,semitone/12),when,.105,.042,'square');
+    if(step%2===1)scheduleTone(root*6,when,.025,.012,'square');
   }
+  function playEffect(type,variant='success'){
+    if(!ensureAudio()||musicMuted)return;audioContext.resume?.();feedbackCount+=1;const now=audioContext.currentTime+.005;
+    if(variant==='wrong'){scheduleTone(92,now,.16,.2,'sawtooth');scheduleTone(70,now+.07,.18,.15,'square');return;}
+    if(type==='blue'){scheduleTone(440,now,.07,.12,'square');scheduleTone(660,now+.055,.11,.1,'square');return;}
+    if(type==='yellow'){scheduleTone(523.25,now,.12,.1,'triangle');scheduleTone(783.99,now+.07,.15,.08,'square');return;}
+    if(type==='rock'){scheduleTone(130.81,now,.08,.2,'square');scheduleTone(196,now+.045,.1,.13,'triangle');return;}
+    if(type==='purple'){scheduleTone(659.25,now,.06,.1,'square');scheduleTone(987.77,now+.045,.1,.08,'triangle');return;}
+    scheduleTone(392,now,.06,.11,'square');scheduleTone(523.25,now+.045,.1,.08,'triangle');
+  }
+  function triggerHaptic(pattern){
+    const nativeHaptics=window.Capacitor?.Plugins?.Haptics;
+    if(nativeHaptics?.impact){try{nativeHaptics.impact({style:Array.isArray(pattern)?'MEDIUM':'LIGHT'});hapticCount+=1;return true;}catch(_){}}
+    if(typeof navigator.vibrate!=='function')return false;
+    try{const didVibrate=navigator.vibrate(pattern);if(didVibrate!==false)hapticCount+=1;return didVibrate!==false;}catch(_){return false;}
+  }
+  function cellFeedback(type,assisted=false){playEffect(type);if(!assisted)triggerHaptic(type==='rock'?[18,18,28]:type==='yellow'?[16,12,24]:18);}
   function pumpMusic(){
     if(!musicRunning||!audioContext)return;
     while(nextNoteAt<audioContext.currentTime+.12){scheduleMusicStep(musicStep,nextNoteAt);musicStep=(musicStep+1)%16;nextNoteAt+=30/soundtrackBpm();}
@@ -508,10 +527,10 @@
     const power={blue:'sky',yellow:'sun',rock:'rock'}[type];if(!power||!equippedPowers.has(power))return;
     const map={blue:blueCells,yellow:yellowCells,rock:rockCells}[type];const item=map.get(index);if(!item)return;
     if(type==='rock'){
-      const strike=()=>{const rock=rockCells.get(index);if(!rock)return;showToast('Rock God');hitRock(index);const remaining=rockCells.get(index);if(remaining)remaining.assistTimer=setTimeout(strike,170);};
+      const strike=()=>{const rock=rockCells.get(index);if(!rock)return;showToast('Rock God');hitRock(index,true);const remaining=rockCells.get(index);if(remaining)remaining.assistTimer=setTimeout(strike,170);};
       item.assistTimer=setTimeout(strike,340);return;
     }
-    item.assistTimer=setTimeout(()=>{if(!map.has(index))return;showToast(type==='blue'?'Sky God':'Sun God');resolveSuccess(type,index);},420);
+    item.assistTimer=setTimeout(()=>{if(!map.has(index))return;showToast(type==='blue'?'Sky God':'Sun God');resolveSuccess(type,index,true);},420);
   }
   function spawnBlue(tutorial=false) {
     const index=pickCell();if(index<0)return -1;
@@ -585,10 +604,10 @@
     if(shouldSpawnRed()&&spawnRed()<0&&(config.mode==='opposite'||config.mode==='quantum')&&config.step<=2)redTrapAccumulator=trapAccumulatorBefore;
     cycleTimer=setTimeout(nextCycle,scaledDelay(config.beatMs));
   }
-  function resolveSuccess(type,index) {
+  function resolveSuccess(type,index,assisted=false) {
     const map={green:activeGreens,blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];const item=map.get(index);const wasTutorial=item?.tutorial;
     if(item?.expiry)clearTimeout(item.expiry);if(item?.holdTimer)clearTimeout(item.holdTimer);if(item?.switchTimer)clearTimeout(item.switchTimer);if(item?.assistTimer)clearTimeout(item.assistTimer);map.delete(index);resolving.add(index);
-    cells[index].classList.add('hit');score+=1;scoreEl.textContent=String(score);showToast(wasTutorial?'GO!':'+1');
+    cells[index].classList.add('hit');score+=1;scoreEl.textContent=String(score);showToast(wasTutorial?'GO!':'+1');cellFeedback(type,assisted);
     setTimeout(()=>{resolving.delete(index);clearCellVisual(index);},280);
     if(wasTutorial)startClock();
   }
@@ -606,12 +625,12 @@
     graceCells.delete(index);
     if(levelStarted){wrong(index);loseLife();}
   }
-  function hitRock(index){const rock=rockCells.get(index);if(!rock)return;rock.hidden=false;rock.hits-=1;cells[index].dataset.hits=String(rock.hits);showToast(rock.hits?`${rock.hits} left`:'Break!');if(rock.hits<=0)resolveSuccess('rock',index);}
+  function hitRock(index,assisted=false){const rock=rockCells.get(index);if(!rock)return;rock.hidden=false;rock.hits-=1;cells[index].dataset.hits=String(rock.hits);showToast(rock.hits?`${rock.hits} left`:'Break!');if(rock.hits<=0)resolveSuccess('rock',index,assisted);else{playEffect('rock');if(!assisted)triggerHaptic(22);}}
   function beginHold(index){const yellow=yellowCells.get(index);if(!yellow||yellow.holding)return;yellow.holding=true;cells[index].classList.add('holding');yellow.holdTimer=setTimeout(()=>resolveSuccess('yellow',index),1000);}
   function endHold(index){const yellow=yellowCells.get(index);if(!yellow||!yellow.holding)return;clearTimeout(yellow.holdTimer);yellow.holding=false;yellow.holdTimer=0;cells[index].classList.remove('holding');}
   function resolveSwipe(index,dx,dy){const blue=blueCells.get(index);if(!blue){tap(index);return;}const far=Math.max(Math.abs(dx),Math.abs(dy))>=SWIPE_THRESHOLD;const direction=!far?'tap':Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');if(direction===blue.direction)resolveSuccess('blue',index);else{wrong(index);if(!blue.tutorial)clearTarget('blue',index);loseLife();}}
   function wireGesture(cell,index){let gesture=null;cell.addEventListener('pointerdown',event=>{event.preventDefault();if(yellowCells.has(index)){gesture={yellow:true};beginHold(index);}else gesture={x:event.clientX,y:event.clientY,blue:blueCells.has(index)};try{cell.setPointerCapture(event.pointerId)}catch(_){}});cell.addEventListener('pointerup',event=>{if(!gesture)return;const start=gesture;gesture=null;if(start.yellow){endHold(index);return;}const dx=event.clientX-start.x,dy=event.clientY-start.y;if(start.blue||blueCells.has(index))resolveSwipe(index,dx,dy);else tap(index);});cell.addEventListener('pointercancel',()=>{if(gesture?.yellow)endHold(index);gesture=null;});}
-  function wrong(index){cells[index].classList.remove('wrong');void cells[index].offsetWidth;cells[index].classList.add('wrong');setTimeout(()=>cells[index].classList.remove('wrong'),310);}
+  function wrong(index){cells[index].classList.remove('wrong');void cells[index].offsetWidth;cells[index].classList.add('wrong');playEffect('green','wrong');triggerHaptic([45,30,60]);setTimeout(()=>cells[index].classList.remove('wrong'),310);}
   function loseLife(){if(!playing)return;misses+=1;lifeEls[misses-1]?.classList.add('lost');showToast('Life lost');if(misses>=4)finishLevel(false);}
   function showToast(text){toast.textContent=text;toast.classList.remove('show');void toast.offsetWidth;toast.classList.add('show');}
   function clearTargets(){['green','red','blue','yellow','rock','purple'].forEach(type=>{const map={green:activeGreens,red:redCells,blue:blueCells,yellow:yellowCells,rock:rockCells,purple:purpleCells}[type];[...map.keys()].forEach(index=>clearTarget(type,index));});resolving.clear();cells.forEach((_,index)=>clearCellVisual(index));}
@@ -640,7 +659,7 @@
   function clearTargetsForTest(){clearTargets();graceCells.clear();}
   function worldMixSequenceForTest(count){const saved=worldCellAccumulator,savedCursor=modePoolCursor;worldCellAccumulator=0;modePoolCursor=0;const sequence=Array.from({length:count},()=>nextWorldTargetType());worldCellAccumulator=saved;modePoolCursor=savedCursor;return sequence;}
   function redTrapSequenceForTest(count){const saved=redTrapAccumulator;redTrapAccumulator=.5;const sequence=Array.from({length:count},()=>shouldSpawnRed());redTrapAccumulator=saved;return sequence;}
-  function getState(){return{screen,level:currentLevel,playing,levelStarted,onboarding,onboardingType,introVisible,equippedPowers:[...equippedPowers],timeScale:runTimeScale,music:{running:musicRunning,muted:musicMuted,bpm:soundtrackBpm()},starScores:{...starScores},score,misses,active:[...activeGreens.keys()],red:[...redCells.keys()],blue:[...blueCells.entries()].map(([index,item])=>({index,direction:item.direction,shownDirection:item.shownDirection,tutorial:item.tutorial})),yellow:[...yellowCells.keys()],rock:[...rockCells.entries()].map(([index,item])=>({index,hits:item.hits,hidden:Boolean(item.hidden),tutorial:item.tutorial})),purple:[...purpleCells.keys()],unlockedThrough};}
+  function getState(){return{screen,level:currentLevel,playing,levelStarted,onboarding,onboardingType,introVisible,equippedPowers:[...equippedPowers],timeScale:runTimeScale,music:{running:musicRunning,muted:musicMuted,bpm:soundtrackBpm(),feedbackCount,hapticCount},starScores:{...starScores},score,misses,active:[...activeGreens.keys()],red:[...redCells.keys()],blue:[...blueCells.entries()].map(([index,item])=>({index,direction:item.direction,shownDirection:item.shownDirection,tutorial:item.tutorial})),yellow:[...yellowCells.keys()],rock:[...rockCells.entries()].map(([index,item])=>({index,hits:item.hits,hidden:Boolean(item.hidden),tutorial:item.tutorial})),purple:[...purpleCells.keys()],unlockedThrough};}
 
   powerCards.forEach(card=>card.addEventListener('click',()=>togglePower(card.dataset.power)));
   introStart.addEventListener('click',beginSelectedLevel);
