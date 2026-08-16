@@ -101,6 +101,13 @@ let browser;
   assert.equal(state.onboarding, true);
   assert.equal(state.levelStarted, false);
   assert.equal(state.active.length, 1);
+  assert.equal(state.music.running, true, 'soundtrack should begin with the playable opening target');
+  assert.equal(state.music.muted, false);
+  await page.click('#soundToggle');
+  assert.equal((await page.evaluate(() => window.__mookLevels.getState())).music.muted, true);
+  assert.equal(await page.locator('#soundToggle').getAttribute('aria-label'), 'Turn soundtrack on');
+  await page.click('#soundToggle');
+  assert.equal((await page.evaluate(() => window.__mookLevels.getState())).music.muted, false);
   const selectionGuard=await page.evaluate(()=>{
     const game=document.querySelector('#gameScreen'),cell=document.querySelector('.cell'),mission=document.querySelector('#mission');
     const event=new Event('selectstart',{bubbles:true,cancelable:true});mission.dispatchEvent(event);
@@ -114,8 +121,15 @@ let browser;
   await page.evaluate(index => window.__mookLevels.tap(index), state.active[0]);
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.levelStarted, true, 'first interaction should start the level timer');
+  const tempoRamp = await page.evaluate(() => {
+    const now = performance.now();
+    return [window.__mookLevels.soundtrackBpmForTest(now), window.__mookLevels.soundtrackBpmForTest(now + 30000 / .75)];
+  });
+  assert.ok(tempoRamp[1] > tempoRamp[0], `soundtrack should accelerate during the level: ${tempoRamp}`);
+  assert.ok(tempoRamp[0] < 82, 'Time Slow should also slow the soundtrack tempo');
 
   await page.evaluate(() => window.__mookLevels.finishLevelForTest(true));
+  assert.equal((await page.evaluate(() => window.__mookLevels.getState())).music.running, false, 'soundtrack should stop outside gameplay');
   assert.equal(await page.locator('#mapScreen').getAttribute('class'), 'screen map-screen active');
   assert.equal(await page.locator('.level-node[data-level="2"]').getAttribute('class'), 'level-node unlocked current');
   assert.equal(await page.locator('.level-node[data-level="1"] .level-stars').textContent(), '★★★★');
