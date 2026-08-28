@@ -3,10 +3,26 @@
   "version": "1.0.0",
   "private": true,
   "description": "A level-based world-map edition of Mook",
+  "type": "module",
   "scripts": {
+    "prepare:web": "node scripts/prepare-web.mjs",
+    "build": "npm run prepare:web",
+    "ios:sync": "npm run build && cap sync ios",
+    "ios:open": "cap open ios",
+    "ios:build": "npm run ios:sync && xcodebuild -workspace ios/App/App.xcworkspace -scheme App -sdk iphonesimulator -configuration Release -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build",
     "test": "node tests/mook-levels-test.cjs"
   },
+  "dependencies": {
+    "@capacitor/core": "8.5.0",
+    "@capacitor/haptics": "8.0.2",
+    "@capacitor/ios": "8.5.0",
+    "@capacitor/splash-screen": "8.0.2",
+    "@capacitor/status-bar": "8.0.3"
+  },
   "devDependencies": {
-    "playwright": "^1.62.1"
+    "@capacitor/assets": "3.0.5",
+    "@capacitor/cli": "8.5.0",
+    "playwright": "^1.62.1",
+    "typescript": "7.0.2"
   }
 }

@@ -56,6 +56,7 @@
     .level-node.current{animation:pulse 1.8s ease-in-out infinite;outline:5px solid rgba(255,255,255,.42)}
     .level-node.locked:after{content:"•";position:absolute;right:-1px;bottom:-3px;width:17px;height:17px;display:grid;place-items:center;border-radius:50%;color:white;background:#71818b;font-size:11px}
     .stage-gate{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);padding:5px 14px;border-radius:12px 12px 0 0;background:rgba(23,40,56,.76);color:white;font-size:9px;font-weight:950;letter-spacing:.12em;text-transform:uppercase}
+    .legal-links{padding:2px 18px max(28px,env(safe-area-inset-bottom));display:flex;justify-content:center;gap:18px;background:#d9e8f1;font-size:11px;font-weight:900}.legal-links a{color:#31596a;text-decoration:none}.legal-links a:focus-visible{outline:3px solid #157a70;outline-offset:4px;border-radius:3px}
 
     /* Game */
     .game-screen{height:100dvh;background:linear-gradient(165deg,#e8fff4,#fff8e9 45%,#edf7ff)}
@@ -114,6 +115,7 @@
       <div class="map-title" id="mapTitle">Green Valley · Level 1 awaits</div>
     </header>
     <div class="map-wrap" id="mapWrap"></div>
+    <footer class="legal-links"><a href="support.html">Support</a><a href="privacy.html">Privacy</a></footer>
   </section>
 
   <section class="screen game-screen" id="gameScreen">
