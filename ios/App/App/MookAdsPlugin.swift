@@ -1,6 +1,7 @@
 import Foundation
 import Capacitor
 import GoogleMobileAds
+import UserMessagingPlatform
 
 @objc(MookAdsPlugin)
 public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContentDelegate {
@@ -8,7 +9,8 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
     public let jsName = "MookAds"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "configure", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "showInterstitial", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "showInterstitial", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "showPrivacyOptions", returnType: CAPPluginReturnPromise)
     ]
 
     private let testInterstitialID = "ca-app-pub-3940256099942544/4411468910"
@@ -23,12 +25,53 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
         isEnabled = Bundle.main.object(forInfoDictionaryKey: "MookAdsEnabled") as? Bool ?? false
         #endif
         guard isEnabled else {
-            call.resolve(["configured": false, "reason": "production-disabled"])
+            call.resolve([
+                "configured": false,
+                "reason": "production-disabled",
+                "privacyOptionsRequired": privacyOptionsRequired()
+            ])
             return
         }
-        MobileAds.shared.start { [weak self] _ in
-            self?.loadInterstitial()
-            call.resolve(["configured": true])
+
+        ConsentInformation.shared.requestConsentInfoUpdate(with: RequestParameters()) { [weak self] error in
+            guard let self else { return }
+            if let error {
+                call.resolve([
+                    "configured": false,
+                    "reason": "consent-info-unavailable",
+                    "privacyOptionsRequired": self.privacyOptionsRequired(),
+                    "detail": error.localizedDescription
+                ])
+                return
+            }
+            ConsentForm.loadAndPresentIfRequired(from: self.bridge?.viewController) { [weak self] _ in
+                guard let self else { return }
+                guard ConsentInformation.shared.canRequestAds else {
+                    call.resolve([
+                        "configured": false,
+                        "reason": "consent-required",
+                        "privacyOptionsRequired": self.privacyOptionsRequired()
+                    ])
+                    return
+                }
+                MobileAds.shared.start { [weak self] _ in
+                    self?.loadInterstitial()
+                    call.resolve([
+                        "configured": true,
+                        "privacyOptionsRequired": self?.privacyOptionsRequired() ?? false
+                    ])
+                }
+            }
+        }
+    }
+
+    @objc public func showPrivacyOptions(_ call: CAPPluginCall) {
+        guard privacyOptionsRequired(), let controller = bridge?.viewController else {
+            call.resolve(["shown": false])
+            return
+        }
+        ConsentForm.presentPrivacyOptionsForm(from: controller) { error in
+            call.resolve(["shown": error == nil])
         }
     }
 
@@ -59,6 +102,10 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
             self?.interstitial = ad
             self?.interstitial?.fullScreenContentDelegate = self
         }
+    }
+
+    private func privacyOptionsRequired() -> Bool {
+        ConsentInformation.shared.privacyOptionsRequirementStatus == .required
     }
 
     public func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {

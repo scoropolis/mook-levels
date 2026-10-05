@@ -1,8 +1,8 @@
 # Monetization v1.1
 
-Status: **app-side implementation complete locally; App Store Connect, AdMob, consent/privacy approval, and device proof remain gated**
+Status: **App Store Connect products and AdMob records configured; serving, consent/privacy approval, and device proof remain gated**
 
-No products, prices, ad units, privacy answers, uploads, submissions, or releases were changed externally by this implementation.
+The six StoreKit product records and one loss-only interstitial unit are configured externally. No privacy answers, uploads, submissions, or releases were changed.
 
 ## Power-up economy
 
@@ -46,16 +46,17 @@ Fallback prices are preview copy only. StoreKit's localized displayPrice replace
 - Remove Ads suppresses every interstitial request.
 - No-fill and presentation errors fail closed and gameplay continues.
 - Debug builds use Google's official iOS sample app ID and interstitial test unit.
-- Release builds keep ads disabled unless MookAdsEnabled is explicitly set and a production MookAdMobInterstitialID is supplied.
+- Production AdMob identifiers are installed in the Release configuration, but Release builds remain disabled while MookAdsEnabled is false.
+- UMP refreshes consent information before Google Mobile Ads starts, presents a required consent form, and blocks ad requests unless the SDK reports that ads may be requested.
+- A Privacy choices control appears when UMP reports that privacy options are required.
 - “Playable” creative is not promised. The integration requests ordinary interstitial demand; creative and mediation inventory determine what appears.
 - Rewarded ads are not exposed in v1.1.
 
 ## External release gates
 
-1. Create the six products in App Store Connect, select final tiers/territories, and attach them to the intended app/version.
-2. Run StoreKit sandbox/device tests for success, cancellation, pending/Ask to Buy, duplicate callback, interrupted delivery, unfinished reconciliation, restore, reinstall, offline launch, and revoked/refunded Remove Ads.
-3. Create the production AdMob app and interstitial unit; replace the sample app ID and set the production unit ID.
-4. Decide age/territory treatment and implement/approve the required UMP consent flow before enabling production ads.
-5. Complete legal review of the privacy policy and App Privacy answers against the final SDK/data behavior.
-6. Prove loss-only timing, caps, no-fill, background/foreground, orientation, and Remove Ads suppression on a physical device.
-7. Obtain explicit approval before upload, submission, pricing, distribution, or release.
+1. Run StoreKit sandbox/device tests for success, cancellation, pending/Ask to Buy, duplicate callback, interrupted delivery, unfinished reconciliation, restore, reinstall, offline launch, and revoked/refunded Remove Ads.
+2. Review AdMob account-level GDPR vendor/legal-basis settings, publish the saved European consent message only after the public privacy text is accurate, and decide age/territory treatment.
+3. Resolve AdMob app-ads.txt and account payment-verification gates without changing legal or banking details from this release workflow.
+4. Complete legal review of the privacy policy and App Privacy answers against the final SDK/data behavior.
+5. Prove consent, privacy options, loss-only timing, caps, no-fill, background/foreground, orientation, and Remove Ads suppression on a physical device.
+6. Obtain explicit approval before enabling MookAdsEnabled, upload, submission, distribution, or release.
