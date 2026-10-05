@@ -4,7 +4,7 @@
 
 - **Name:** Mook Worlds
 - **Subtitle:** Seventy levels. Seven worlds.
-- **Bundle ID:** `com.scoropolis.mookworlds`
+- **Bundle ID:** `com.skygardenapps.mookworlds`
 - **Primary category:** Games — Casual
 - **Secondary category:** Games — Action
 - **Age rating recommendation:** 4+

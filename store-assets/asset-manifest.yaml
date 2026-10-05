@@ -1,0 +1,46 @@
+version: 1
+release:
+  product: Mook Worlds
+  app_store_name: "Mook Worlds: Puzzle Adventure"
+  version: "1.0"
+  build: "1"
+  commit: 09df2251d7b6732bc1f84da67d74a56d05783c50
+checked_at: 2026-08-27
+official_sources:
+  apple_screenshots: https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/
+supported_destinations: [apple_app_store_ios]
+locales: [en-US]
+brand:
+  system_path: /Users/pointform/Projects/mook-levels/www/index.html
+  screenshot_expert_gen: app-store-asset-production
+capture:
+  release_build_verified: true
+  raw_capture_root: raw-captures/ios/iphone-6.5/en-US
+assets:
+  - display_group: iphone_6_5
+    dimensions: 1242x2688
+    format: baseline_jpeg
+    files:
+      - exports/apple/iphone-6.5/en-US/apple-iphone65-en-US-01-seventy-level-adventure-1242x2688.jpg
+      - exports/apple/iphone-6.5/en-US/apple-iphone65-en-US-02-new-rules-every-world-1242x2688.jpg
+      - exports/apple/iphone-6.5/en-US/apple-iphone65-en-US-03-tap-swipe-hold-break-1242x2688.jpg
+      - exports/apple/iphone-6.5/en-US/apple-iphone65-en-US-04-earn-four-stars-1242x2688.jpg
+      - exports/apple/iphone-6.5/en-US/apple-iphone65-en-US-05-play-anywhere-1242x2688.jpg
+validation:
+  dimensions: passed
+  formats: passed
+  alpha: not_applicable_jpeg
+  colour_profile: passed_rgb
+  file_sizes: passed
+  pii_and_secrets: passed
+  claim_accuracy: passed
+  manifest_coverage: passed
+approval:
+  contact_sheet: contact-sheets/mook-worlds-ios-en-US-r1.jpg
+  revision: r1
+  adam_approved: true
+  approved_at: 2026-08-27
+handoff:
+  mobile_app_publishing_accepted: true
+  uploaded: true
+  console_render_verified: true

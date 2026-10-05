@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.scoropolis.mookworlds',
+  appId: 'com.skygardenapps.mookworlds',
   appName: 'Mook Worlds',
   webDir: 'www',
   backgroundColor: '#65d6c5',
