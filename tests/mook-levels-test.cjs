@@ -120,10 +120,10 @@ let browser;
   assert.match(await page.locator('#introTitle').textContent(), /Green Valley/);
   assert.match(await page.locator('#introSummary').textContent(), /30 game seconds/);
   assert.deepEqual(await page.locator('.power-card').allTextContents(), [
-    'Sky GodAuto-clears every blue swipeUnlimited',
-    'Sun GodAuto-completes every yellow holdUnlimited',
-    'Rock GodAuto-breaks every gray rockUnlimited',
-    'Time SlowSlows game time by 25%Unlimited'
+    'Sky GodAuto-clears every blue swipe5 owned',
+    'Sun GodAuto-completes every yellow hold5 owned',
+    'Rock GodAuto-breaks every gray rock5 owned',
+    'Time SlowSlows game time by 25%5 owned'
   ]);
   await page.click('.power-card[data-power="time"]');
   assert.equal(await page.locator('.power-card[data-power="time"]').getAttribute('aria-pressed'), 'true');
@@ -364,8 +364,8 @@ let browser;
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(51));
   assert.equal(await page.locator('.endless-card').getAttribute('class'), 'stage-card endless-card', 'World 5 completion should clear the Endless Play fog');
   assert.equal(await page.locator('.endless-card .world-lock').count(), 0);
-  assert.equal(await page.locator('.endless-card .endless-status').textContent(), 'Coming Soon');
-  assert.equal(await page.locator('.endless-card').getAttribute('aria-disabled'), 'true', 'the teaser must remain non-interactive until the mode exists');
+  assert.equal(await page.locator('.endless-card .endless-status').textContent(), 'Play');
+  assert.equal(await page.locator('.endless-card').isEnabled(), true, 'the destination becomes playable after World 5');
   await page.click('.level-node[data-level="51"]', { force: true });
   await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
@@ -490,7 +490,7 @@ let browser;
   await page.click('.level-node[data-level="68"]', { force: true });
   assert.deepEqual([...new Set(await page.evaluate(() => window.__mookLevels.worldMixSequenceForTest(25)))].sort(),['blue','green','purple','rock','yellow']);
 
-  // Unlimited Gods automatically clear their matching cells for one selected level only.
+  // Counted Gods automatically clear their matching cells for one selected level only.
   async function verifyGod(level, power, type, settleMs) {
     await page.evaluate(() => window.__mookLevels.returnToMap());
     await page.evaluate(level => window.__mookLevels.unlockThroughForTest(level), level);
@@ -515,6 +515,92 @@ let browser;
   await verifyGod(21, 'sun', 'yellow', 700);
   await verifyGod(31, 'rock', 'rock', 1500);
   assert.match(await page.locator('#stageLabel').textContent(), /Rock Summit/);
+
+  // v1.1: economy migration, StoreKit delivery idempotency, ads policy, and Endless lifecycle.
+  const v11Page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  await v11Page.addInitScript(() => {
+    localStorage.clear();
+    localStorage.setItem('mook-worlds-unlocked', '51');
+    localStorage.setItem('mook-worlds-completed', JSON.stringify(Object.fromEntries(Array.from({length:50},(_,index)=>[String(index+1),1]))));
+    window.__nativeCalls = { purchases: [], ads: 0, restores: 0, acknowledgements: [] };
+    window.Capacitor = { Plugins: {
+      MookCommerce: {
+        getProducts: async ({ids}) => ({ products: ids.map((id,index) => ({id,displayPrice:`$${index+1}.99`})), removeAds: false, pending: [] }),
+        purchase: async ({productId}) => { window.__nativeCalls.purchases.push(productId); return { deliveries: [{productId,transactionId:`tx-${window.__nativeCalls.purchases.length}`}], cancelled: false }; },
+        acknowledge: async ({transactionId}) => { window.__nativeCalls.acknowledgements.push(transactionId); return {}; },
+        restore: async () => { window.__nativeCalls.restores += 1; return {removeAds:true,pending:[]}; }
+      },
+      MookAds: {
+        configure: async () => ({}),
+        showInterstitial: async () => { window.__nativeCalls.ads += 1; return {shown:true}; }
+      }
+    } };
+  });
+  await v11Page.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
+  const endlessConfigs = await v11Page.evaluate(() => [0,30000,60000,90000,120000,240000].map(window.__mookLevels.getEndlessConfig));
+  assert.deepEqual(endlessConfigs.map(item => item.mechanics), [
+    ['green','red'],['green','red','blue'],['green','red','blue','yellow'],
+    ['green','red','blue','yellow','rock'],['green','red','blue','yellow','rock','purple'],['green','red','blue','yellow','rock','purple']
+  ]);
+  assert.equal(endlessConfigs.every((item,index,array) => index === 0 || item.beatMs <= array[index-1].beatMs), true, 'Endless cadence should continually intensify');
+  let v11State = await v11Page.evaluate(() => window.__mookLevels.getState());
+  assert.deepEqual(v11State.economy.balances, {sky:5,sun:5,rock:5,time:5}, 'users without an economy record receive the versioned starter migration once');
+  assert.equal(v11State.economy.ledger[0].kind, 'migration');
+
+  await v11Page.evaluate(() => window.__mookLevels.setInventoryForTest({sky:1}));
+  await v11Page.click('.level-node[data-level="11"]', {force:true});
+  await v11Page.click('.power-card[data-power="sky"]');
+  await v11Page.click('#introStart');
+  v11State = await v11Page.evaluate(() => window.__mookLevels.getState());
+  assert.equal(v11State.economy.balances.sky, 0, 'equipped inventory is consumed exactly when play begins');
+  assert.equal(v11State.economy.ledger.at(-1).kind, 'consume');
+  await v11Page.evaluate(() => window.__mookLevels.returnToMap());
+  await v11Page.click('.level-node[data-level="11"]', {force:true});
+  assert.equal(await v11Page.locator('.power-card[data-power="sky"]').isDisabled(), true, 'zero-stock powers cannot be equipped');
+  await v11Page.evaluate(() => window.__mookLevels.returnToMap());
+
+  assert.equal(await v11Page.locator('.endless-card').isEnabled(), true);
+  await v11Page.click('.endless-card');
+  assert.match(await v11Page.locator('#introSummary').textContent(), /checkpoints bank every 2 minutes/);
+  await v11Page.click('#introStart');
+  v11State = await v11Page.evaluate(() => window.__mookLevels.getState());
+  await v11Page.evaluate(index => window.__mookLevels.tap(index), v11State.active[0]);
+  await v11Page.evaluate(() => window.__mookLevels.setEndlessProgressForTest(120000,1));
+  await v11Page.evaluate(() => window.__mookLevels.finishEndlessForTest());
+  assert.equal(await v11Page.locator('#resultPrimary').textContent(), 'Continue once');
+  await v11Page.click('#resultPrimary');
+  v11State = await v11Page.evaluate(() => window.__mookLevels.getState());
+  assert.equal(v11State.endless.continueUsed, true);
+  assert.equal(v11State.endless.elapsedMs, 120000);
+  assert.equal(v11State.score, 1, 'continue restores the banked run score and begins a fresh attempt');
+  await v11Page.evaluate(() => window.__mookLevels.finishEndlessForTest());
+  assert.equal(await v11Page.locator('#resultPrimary').textContent(), 'Try again', 'a second continue is never offered');
+  assert.equal(await v11Page.evaluate(() => localStorage.getItem('mook-worlds-endless-high-score')), '1');
+
+  await v11Page.evaluate(() => window.__mookLevels.setAdSessionForTest({startedAt:Date.now()-180000,lossesSinceAd:2,shown:0,lastShownAt:0}));
+  assert.equal(await v11Page.evaluate(() => window.__mookLevels.maybePresentLossAdForTest()), true);
+  assert.equal(await v11Page.evaluate(() => window.__nativeCalls.ads), 1);
+  v11State = await v11Page.evaluate(() => window.__mookLevels.getState());
+  assert.equal(v11State.adSession.lossesSinceAd, 0);
+  assert.equal(v11State.adSession.shown, 1);
+
+  await v11Page.evaluate(() => window.__mookLevels.returnToMap());
+  await v11Page.click('#storeButton');
+  assert.equal(await v11Page.locator('.product-button').count(), 6);
+  await v11Page.evaluate(async () => {
+    await window.__mookLevels.applyPurchaseDeliveryForTest({productId:'com.pointform.mookworlds.power.sky.5',transactionId:'duplicate-proof'});
+    await window.__mookLevels.applyPurchaseDeliveryForTest({productId:'com.pointform.mookworlds.power.sky.5',transactionId:'duplicate-proof'});
+  });
+  v11State = await v11Page.evaluate(() => window.__mookLevels.getState());
+  assert.equal(v11State.economy.balances.sky, 5, 'a StoreKit transaction is fulfilled only once');
+  await v11Page.click('#restorePurchases');
+  await wait(50);
+  v11State = await v11Page.evaluate(() => window.__mookLevels.getState());
+  assert.equal(v11State.removeAds, true);
+  await v11Page.evaluate(() => window.__mookLevels.setAdSessionForTest({startedAt:Date.now()-300000,lossesSinceAd:3,shown:0,lastShownAt:0}));
+  assert.equal(await v11Page.evaluate(() => window.__mookLevels.maybePresentLossAdForTest()), false, 'Remove Ads suppresses all interstitial attempts');
+  assert.equal(await v11Page.evaluate(() => window.__nativeCalls.ads), 1);
+  await v11Page.close();
 
   console.log(JSON.stringify({ ok: true, levels: configs.length, finalState: state }));
 })().catch(error => {
