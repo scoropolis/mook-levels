@@ -3,8 +3,8 @@
 ## Identity and account
 
 - [ ] Confirm App Store name availability for `Mook Worlds`.
-- [ ] Register bundle ID `com.scoropolis.mookworlds` on team `48NQ2H8ZHB`.
-- [ ] Create the App Store Connect app record only after name and bundle identity are confirmed.
+- [x] Register bundle ID `com.skygardenapps.mookworlds` on team `588GPA4GL2`.
+- [x] Create the App Store Connect app record only after name and bundle identity are confirmed.
 
 ## Binary
 

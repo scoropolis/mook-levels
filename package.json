@@ -7,10 +7,12 @@
   "scripts": {
     "prepare:web": "node scripts/prepare-web.mjs",
     "build": "npm run prepare:web",
-    "ios:sync": "npm run build && cap sync ios",
+    "ios:sync": "npm run build && env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 cap sync ios",
     "ios:open": "cap open ios",
     "ios:build": "npm run ios:sync && xcodebuild -workspace ios/App/App.xcworkspace -scheme App -sdk iphonesimulator -configuration Release -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build",
-    "test": "node tests/mook-levels-test.cjs"
+    "test": "npm run test:gameplay && npm run test:release-identity",
+    "test:gameplay": "node tests/mook-levels-test.cjs",
+    "test:release-identity": "node tests/release-identity-test.cjs"
   },
   "dependencies": {
     "@capacitor/core": "8.5.0",
