@@ -12,12 +12,12 @@ const project = read('ios/App/App.xcodeproj/project.pbxproj');
 const monetization = read('docs/MONETIZATION.md');
 
 const productIDs = [
-  'com.pointform.mookworlds.power.sky.5',
-  'com.pointform.mookworlds.power.sun.5',
-  'com.pointform.mookworlds.power.rock.5',
-  'com.pointform.mookworlds.power.time.5',
-  'com.pointform.mookworlds.power.bundle.12',
-  'com.pointform.mookworlds.removeads'
+  'com.skygardenapps.mookworlds.power.sky.5',
+  'com.skygardenapps.mookworlds.power.sun.5',
+  'com.skygardenapps.mookworlds.power.rock.5',
+  'com.skygardenapps.mookworlds.power.time.5',
+  'com.skygardenapps.mookworlds.power.bundle.12',
+  'com.skygardenapps.mookworlds.removeads'
 ];
 for (const id of productIDs) {
   assert.match(commerce, new RegExp(id.replaceAll('.', '\\.')));

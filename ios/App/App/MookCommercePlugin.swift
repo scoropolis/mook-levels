@@ -14,14 +14,14 @@ public final class MookCommercePlugin: CAPPlugin, CAPBridgedPlugin {
     ]
 
     private let allowedProductIDs: Set<String> = [
-        "com.pointform.mookworlds.power.sky.5",
-        "com.pointform.mookworlds.power.sun.5",
-        "com.pointform.mookworlds.power.rock.5",
-        "com.pointform.mookworlds.power.time.5",
-        "com.pointform.mookworlds.power.bundle.12",
-        "com.pointform.mookworlds.removeads"
+        "com.skygardenapps.mookworlds.power.sky.5",
+        "com.skygardenapps.mookworlds.power.sun.5",
+        "com.skygardenapps.mookworlds.power.rock.5",
+        "com.skygardenapps.mookworlds.power.time.5",
+        "com.skygardenapps.mookworlds.power.bundle.12",
+        "com.skygardenapps.mookworlds.removeads"
     ]
-    private let removeAdsID = "com.pointform.mookworlds.removeads"
+    private let removeAdsID = "com.skygardenapps.mookworlds.removeads"
 
     @objc public func getProducts(_ call: CAPPluginCall) {
         let requested = Set(call.getArray("ids", String.self) ?? []).intersection(allowedProductIDs)
