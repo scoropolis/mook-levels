@@ -1,6 +1,6 @@
 {
   "name": "mook-levels",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "A level-based world-map edition of Mook",
   "type": "module",
@@ -10,9 +10,10 @@
     "ios:sync": "npm run build && env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 cap sync ios",
     "ios:open": "cap open ios",
     "ios:build": "npm run ios:sync && xcodebuild -workspace ios/App/App.xcworkspace -scheme App -sdk iphonesimulator -configuration Release -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build",
-    "test": "npm run test:gameplay && npm run test:release-identity",
+    "test": "npm run test:gameplay && npm run test:release-identity && npm run test:v1.1-native",
     "test:gameplay": "node tests/mook-levels-test.cjs",
-    "test:release-identity": "node tests/release-identity-test.cjs"
+    "test:release-identity": "node tests/release-identity-test.cjs",
+    "test:v1.1-native": "node tests/v1-1-native-test.cjs"
   },
   "dependencies": {
     "@capacitor/core": "8.5.0",
