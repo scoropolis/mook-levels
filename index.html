@@ -214,17 +214,17 @@
   const POWER_TYPES = ['sky','sun','rock','time'];
   const POWER_LABELS = {sky:'Sky',sun:'Sun',rock:'Rock',time:'Time'};
   const STORE_PRODUCTS = [
-    {id:'com.pointform.mookworlds.power.sky.5',name:'Sky God ×5',detail:'Five blue-swipe assists',fallback:'$0.99'},
-    {id:'com.pointform.mookworlds.power.sun.5',name:'Sun God ×5',detail:'Five yellow-hold assists',fallback:'$0.99'},
-    {id:'com.pointform.mookworlds.power.rock.5',name:'Rock God ×5',detail:'Five rock-breaking assists',fallback:'$0.99'},
-    {id:'com.pointform.mookworlds.power.time.5',name:'Time Slow ×5',detail:'Five slower-time runs',fallback:'$0.99'},
-    {id:'com.pointform.mookworlds.power.bundle.12',name:'Adventure Pack ×12',detail:'Three of every power-up',fallback:'$1.99'},
-    {id:'com.pointform.mookworlds.removeads',name:'Remove Ads',detail:'One-time purchase · restorable',fallback:'$2.99',nonConsumable:true}
+    {id:'com.skygardenapps.mookworlds.power.sky.5',name:'Sky God ×5',detail:'Five blue-swipe assists',fallback:'$0.99'},
+    {id:'com.skygardenapps.mookworlds.power.sun.5',name:'Sun God ×5',detail:'Five yellow-hold assists',fallback:'$0.99'},
+    {id:'com.skygardenapps.mookworlds.power.rock.5',name:'Rock God ×5',detail:'Five rock-breaking assists',fallback:'$0.99'},
+    {id:'com.skygardenapps.mookworlds.power.time.5',name:'Time Slow ×5',detail:'Five slower-time runs',fallback:'$0.99'},
+    {id:'com.skygardenapps.mookworlds.power.bundle.12',name:'Adventure Pack ×12',detail:'Three of every power-up',fallback:'$1.99'},
+    {id:'com.skygardenapps.mookworlds.removeads',name:'Remove Ads',detail:'One-time purchase · restorable',fallback:'$2.99',nonConsumable:true}
   ];
   const PRODUCT_GRANTS = {
-    'com.pointform.mookworlds.power.sky.5':{sky:5},'com.pointform.mookworlds.power.sun.5':{sun:5},
-    'com.pointform.mookworlds.power.rock.5':{rock:5},'com.pointform.mookworlds.power.time.5':{time:5},
-    'com.pointform.mookworlds.power.bundle.12':{sky:3,sun:3,rock:3,time:3}
+    'com.skygardenapps.mookworlds.power.sky.5':{sky:5},'com.skygardenapps.mookworlds.power.sun.5':{sun:5},
+    'com.skygardenapps.mookworlds.power.rock.5':{rock:5},'com.skygardenapps.mookworlds.power.time.5':{time:5},
+    'com.skygardenapps.mookworlds.power.bundle.12':{sky:3,sun:3,rock:3,time:3}
   };
   const DIRECTIONS = ['up','right','down','left'];
   const ARROWS = {up:'↑',right:'→',down:'↓',left:'←'};
@@ -552,7 +552,7 @@
   async function reconcilePurchases(deliveries){for(const delivery of deliveries||[])await applyPurchaseDelivery(delivery);}
   async function applyPurchaseDelivery(delivery){
     const productId=delivery?.productId;const transactionId=String(delivery?.transactionId||'');if(!productId||!transactionId)return false;
-    if(productId==='com.pointform.mookworlds.removeads'){removeAds=true;try{localStorage.setItem('mook-worlds-remove-ads','1');}catch(_){} }
+    if(productId==='com.skygardenapps.mookworlds.removeads'){removeAds=true;try{localStorage.setItem('mook-worlds-remove-ads','1');}catch(_){} }
     else if(PRODUCT_GRANTS[productId])recordInventory(`purchase-${transactionId}`,'purchase',PRODUCT_GRANTS[productId],{productId,transactionId});
     try{await commercePlugin()?.acknowledge?.({transactionId});}catch(_){}renderStore();return true;
   }

@@ -588,8 +588,8 @@ let browser;
   await v11Page.click('#storeButton');
   assert.equal(await v11Page.locator('.product-button').count(), 6);
   await v11Page.evaluate(async () => {
-    await window.__mookLevels.applyPurchaseDeliveryForTest({productId:'com.pointform.mookworlds.power.sky.5',transactionId:'duplicate-proof'});
-    await window.__mookLevels.applyPurchaseDeliveryForTest({productId:'com.pointform.mookworlds.power.sky.5',transactionId:'duplicate-proof'});
+    await window.__mookLevels.applyPurchaseDeliveryForTest({productId:'com.skygardenapps.mookworlds.power.sky.5',transactionId:'duplicate-proof'});
+    await window.__mookLevels.applyPurchaseDeliveryForTest({productId:'com.skygardenapps.mookworlds.power.sky.5',transactionId:'duplicate-proof'});
   });
   v11State = await v11Page.evaluate(() => window.__mookLevels.getState());
   assert.equal(v11State.economy.balances.sky, 5, 'a StoreKit transaction is fulfilled only once');

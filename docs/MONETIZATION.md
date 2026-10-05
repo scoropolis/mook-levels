@@ -27,12 +27,12 @@ The iOS app includes a local MookCommerce Capacitor bridge. It loads products, v
 
 | Product ID | Type | App-side delivery | Provisional display intent |
 | --- | --- | --- | --- |
-| com.pointform.mookworlds.power.sky.5 | Consumable | Sky God ×5 | $0.99 TBD |
-| com.pointform.mookworlds.power.sun.5 | Consumable | Sun God ×5 | $0.99 TBD |
-| com.pointform.mookworlds.power.rock.5 | Consumable | Rock God ×5 | $0.99 TBD |
-| com.pointform.mookworlds.power.time.5 | Consumable | Time Slow ×5 | $0.99 TBD |
-| com.pointform.mookworlds.power.bundle.12 | Consumable | Three of every type | $1.99 TBD |
-| com.pointform.mookworlds.removeads | Non-consumable | Suppress interstitials | $2.99 TBD |
+| com.skygardenapps.mookworlds.power.sky.5 | Consumable | Sky God ×5 | $0.99 TBD |
+| com.skygardenapps.mookworlds.power.sun.5 | Consumable | Sun God ×5 | $0.99 TBD |
+| com.skygardenapps.mookworlds.power.rock.5 | Consumable | Rock God ×5 | $0.99 TBD |
+| com.skygardenapps.mookworlds.power.time.5 | Consumable | Time Slow ×5 | $0.99 TBD |
+| com.skygardenapps.mookworlds.power.bundle.12 | Consumable | Three of every type | $1.99 TBD |
+| com.skygardenapps.mookworlds.removeads | Non-consumable | Suppress interstitials | $2.99 TBD |
 
 Fallback prices are preview copy only. StoreKit's localized displayPrice replaces them when configured. Products and territory prices must be created separately in App Store Connect.
 
