@@ -20,6 +20,37 @@ let browser;
   assert.equal(await page.locator('.level-node').count(), 70, 'world map should render 70 levels');
   assert.equal(await page.locator('.level-node.unlocked').count(), 1, 'only level one starts unlocked');
   assert.match(await page.locator('#mapTitle').textContent(), /Green Valley/);
+  assert.equal(await page.locator('.stage-card[data-world="1"]').getAttribute('class'), 'stage-card stage-green');
+  assert.equal(await page.locator('.stage-card[data-world].world-locked').count(), 6, 'every world after World 1 should begin behind fog');
+  assert.match(await page.locator('.stage-card[data-world="2"]').getAttribute('aria-label'), /World 2 locked.*Complete World 1/);
+  assert.equal(await page.locator('.stage-card[data-world="2"] .stage-content').getAttribute('aria-hidden'), 'true');
+  assert.equal(await page.locator('.stage-card[data-world="2"] .stage-content').getAttribute('inert'), '');
+  assert.equal(await page.locator('.stage-card[data-world="2"] .level-node:enabled').count(), 0, 'fogged world levels must not be interactive');
+  assert.match(await page.locator('.stage-card[data-world="2"] .stage-content').evaluate(element => getComputedStyle(element).filter), /blur\(10px\)/);
+  assert.equal(await page.locator('.stage-card[data-world="2"] .world-lock-badge span').textContent(), 'Complete World 1');
+  assert.equal(await page.locator('.endless-card.world-locked').count(), 1, 'Endless Play should begin clouded');
+  assert.match(await page.locator('.endless-card').getAttribute('aria-label'), /locked.*Complete World 5/);
+  assert.deepEqual(await page.locator('#mapWrap > .stage-card').evaluateAll(cards => cards.map(card => card.dataset.world || card.dataset.destination)), ['1','2','3','4','5','endless','6','7'], 'Endless Play should sit after World 5');
+
+  const persistedPage = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  await persistedPage.addInitScript(() => {
+    localStorage.setItem('mook-worlds-unlocked', '11');
+    localStorage.setItem('mook-worlds-completed', JSON.stringify(Object.fromEntries(Array.from({length:10},(_,index)=>[String(index+1),1]))));
+    localStorage.setItem('mook-worlds-stars', '{}');
+  });
+  await persistedPage.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
+  assert.equal(await persistedPage.locator('.stage-card[data-world="2"]').getAttribute('class'), 'stage-card stage-blue', 'persisted completion should clear the next world without stars');
+  assert.equal(await persistedPage.locator('.stage-card[data-world="2"] .world-lock').count(), 0);
+  assert.equal(await persistedPage.locator('.stage-card[data-world="3"]').getAttribute('class'), 'stage-card stage-yellow world-locked');
+  assert.match(await persistedPage.locator('#mapTitle').textContent(), /Sky Current/, 'valid persisted completion should expose the newly available world title');
+  await persistedPage.close();
+
+  const inconsistentPage = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  await inconsistentPage.addInitScript(() => localStorage.setItem('mook-worlds-unlocked', '11'));
+  await inconsistentPage.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
+  assert.equal(await inconsistentPage.locator('.stage-card[data-world="2"] .level-node:enabled').count(), 0);
+  assert.equal(await inconsistentPage.locator('#mapTitle').textContent(), 'Complete World 1 to reveal the next world', 'stale unlock data must not expose a locked world title');
+  await inconsistentPage.close();
 
   assert.deepEqual(await page.evaluate(() => [0,1,2,3,4].map(window.__mookLevels.starsForMisses)), [4,3,2,1,0]);
   const configs = await page.evaluate(() => Array.from({ length: 70 }, (_, index) => window.__mookLevels.getLevelConfig(index + 1)));
@@ -160,6 +191,15 @@ let browser;
   assert.equal(await page.locator('#levelOverlay').getAttribute('class'), 'level-overlay', 'the congratulations screen should wait for the player');
   await page.click('#resultPrimary');
   assert.equal(await page.locator('.level-node[data-level="1"] .level-stars').textContent(), '★★★★');
+
+  for (let level = 2; level <= 10; level++) {
+    await page.click(`.level-node[data-level="${level}"]`, { force: true });
+    await page.click('#introStart');
+    await page.evaluate(() => window.__mookLevels.finishLevelForTest(true));
+  }
+  assert.equal(await page.locator('.stage-card[data-world="2"]').getAttribute('class'), 'stage-card stage-blue', 'finishing World 1 in-session should clear World 2 fog immediately');
+  assert.equal(await page.locator('.stage-card[data-world="2"] .world-lock').count(), 0);
+  assert.equal(await page.locator('.stage-card[data-world="2"] .level-node[data-level="11"]:enabled').count(), 1);
 
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(11));
   await page.click('.level-node[data-level="11"]', { force: true });
@@ -322,6 +362,10 @@ let browser;
   // World 6: red is the positive tap, green is the trap, and arrows require the opposite swipe.
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(51));
+  assert.equal(await page.locator('.endless-card').getAttribute('class'), 'stage-card endless-card', 'World 5 completion should clear the Endless Play fog');
+  assert.equal(await page.locator('.endless-card .world-lock').count(), 0);
+  assert.equal(await page.locator('.endless-card .endless-status').textContent(), 'Coming Soon');
+  assert.equal(await page.locator('.endless-card').getAttribute('aria-disabled'), 'true', 'the teaser must remain non-interactive until the mode exists');
   await page.click('.level-node[data-level="51"]', { force: true });
   await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
