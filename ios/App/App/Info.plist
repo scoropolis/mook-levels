@@ -22,13 +22,13 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<!-- Official Google sample ID. Replace during the separately gated production AdMob setup. -->
+	<!-- Production identifiers are installed; serving remains gated by MookAdsEnabled and UMP. -->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<string>ca-app-pub-7880322362965888~7439394865</string>
 	<key>MookAdsEnabled</key>
 	<false/>
 	<key>MookAdMobInterstitialID</key>
-	<string></string>
+	<string>ca-app-pub-7880322362965888/5491143513</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
