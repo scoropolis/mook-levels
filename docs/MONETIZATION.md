@@ -1,56 +1,61 @@
-# Monetization Direction
+# Monetization v1.1
 
-Status: **v1.1 product direction — implementation deferred**
+Status: **app-side implementation complete locally; App Store Connect, AdMob, consent/privacy approval, and device proof remain gated**
 
-No StoreKit or AdMob integration belongs in the locked-world visual change. Product identifiers, consent/privacy design, inventory economy, restoration behavior, and the sandbox test matrix require a dedicated implementation pass.
+No products, prices, ad units, privacy answers, uploads, submissions, or releases were changed externally by this implementation.
 
-## Product decisions
+## Power-up economy
 
-### Power-up inventory
+- Power-ups are typed consumable balances: sky, sun, rock, and time.
+- New and pre-economy installs receive a one-time starter migration of five units of each type.
+- Selecting a power does not consume it. All selected powers are consumed atomically when play begins.
+- Balances may stockpile without an app-imposed cap in v1.1.
+- A four-star clear earns exactly one power-up the first time that level achieves the reward. The deterministic world mapping is:
+  - Worlds 1 and 5: Time Slow
+  - World 2: Sky God
+  - World 3: Sun God
+  - World 4: Rock God
+  - World 6: Sky God
+  - World 7: Sun God
+- Rewards are not farmable: awarded level IDs are persisted.
+- Storage is versioned and contains typed balances plus a bounded transaction/reward ledger. A future token wallet can be added as another typed account without redefining existing balances.
+- Inventory is device-local. Consumables are not represented as restorable purchases and no cross-device inventory claim is made.
 
-- Replace unlimited power-ups with counted consumable inventory.
-- Award inventory through performance rewards and occasional giveaways.
-- Sell direct consumable power-up packs in v1.1.
-- Do not introduce a soft-currency or token layer yet.
-- Design storage around typed balances and an auditable transaction/award model so a token wallet can be added later without migrating or redefining existing power-up balances.
+## StoreKit 2
 
-### StoreKit
+The iOS app includes a local MookCommerce Capacitor bridge. It loads products, verifies StoreKit transactions, exposes unfinished verified transactions for reconciliation, and finishes each transaction only after the web economy acknowledges idempotent delivery. AppStore.sync() restores the Remove Ads entitlement.
 
-- Add StoreKit in a dedicated phase for consumable power-up packs.
-- Add a non-consumable **Remove Ads** purchase.
-- Working Remove Ads price: **US $2.99**, with final App Store tier and territory pricing TBD.
-- Define purchase recovery, transaction reconciliation, interrupted purchase handling, and device/reinstall behavior before implementation. Remove Ads must support the appropriate StoreKit restore/sync path; consumable inventory recovery must not be assumed to behave like a restorable non-consumable.
+| Product ID | Type | App-side delivery | Provisional display intent |
+| --- | --- | --- | --- |
+| com.pointform.mookworlds.power.sky.5 | Consumable | Sky God ×5 | $0.99 TBD |
+| com.pointform.mookworlds.power.sun.5 | Consumable | Sun God ×5 | $0.99 TBD |
+| com.pointform.mookworlds.power.rock.5 | Consumable | Rock God ×5 | $0.99 TBD |
+| com.pointform.mookworlds.power.time.5 | Consumable | Time Slow ×5 | $0.99 TBD |
+| com.pointform.mookworlds.power.bundle.12 | Consumable | Three of every type | $1.99 TBD |
+| com.pointform.mookworlds.removeads | Non-consumable | Suppress interstitials | $2.99 TBD |
 
-### Advertising
+Fallback prices are preview copy only. StoreKit's localized displayPrice replaces them when configured. Products and territory prices must be created separately in App Store Connect.
 
-- Use AdMob interstitials only after a lost match, never after a win.
-- Enforce frequency and per-session caps.
-- Present only at a safe post-result transition, never over active gameplay, the result animation, or an in-progress purchase/continue flow.
-- Keep ad demand architecture compatible with interstitial and rewarded inventory.
-- Do not promise “playable preview” ads as a distinct guaranteed format; playable creative depends on available demand and mediation inventory.
+## AdMob policy and implementation
 
-## Recommended implementation phases
+- Interstitial eligibility is evaluated only from a loss result. Wins never call the ad path.
+- The first eligible presentation requires three losses and at least two session minutes.
+- After an impression, another requires three more losses and at least two minutes.
+- The cap is three interstitials per app session.
+- Ads are requested only after the result UI is safely presented, never during gameplay, result animation, purchase, or continue selection.
+- Remove Ads suppresses every interstitial request.
+- No-fill and presentation errors fail closed and gameplay continues.
+- Debug builds use Google's official iOS sample app ID and interstitial test unit.
+- Release builds keep ads disabled unless MookAdsEnabled is explicitly set and a production MookAdMobInterstitialID is supplied.
+- “Playable” creative is not promised. The integration requests ordinary interstitial demand; creative and mediation inventory determine what appears.
+- Rewarded ads are not exposed in v1.1.
 
-1. **Economy specification**
-   - Choose pack contents/prices, reward cadence, giveaway rules, inventory caps, consumption timing, and offline/reinstall behavior.
-   - Define stable product identifiers and the future-compatible inventory schema.
-2. **StoreKit and inventory**
-   - Implement counted inventory, earning/consumption, consumable packs, Remove Ads, transaction reconciliation, restore/sync behavior, and failure recovery.
-   - Add StoreKit configuration plus sandbox tests for purchase, cancel, pending, duplicate delivery, interrupted delivery, restore, reinstall, and offline launch.
-3. **Ads, consent, and privacy**
-   - Finalize AdMob application/ad-unit identifiers, consent flow, age/territory handling, privacy disclosures, and App Privacy answers.
-   - Implement loss-only interstitial placement, caps, safe timing, Remove Ads suppression, and no-fill/error behavior.
-4. **Balance and release proof**
-   - Tune rewards, pack value, ad frequency, and retention impact.
-   - Complete device testing, StoreKit sandbox proof, ad/consent test matrix, privacy review, and App Store metadata updates before upload.
+## External release gates
 
-## Unresolved product decisions
-
-- Power-up pack sizes, mix, prices, and whether packs are single-type or bundled.
-- Performance reward thresholds, giveaway cadence, and maximum stored inventory.
-- When inventory is consumed and what happens on an aborted or interrupted level.
-- Whether inventory remains device-local or gains account/server-backed reconciliation.
-- Exact Remove Ads territory pricing and whether rewarded ads, if later offered, remain available after purchase.
-- Interstitial frequency/session caps and minimum delay after a loss.
-- Consent provider, age handling, target territories, and final privacy declarations.
-- Final StoreKit product IDs, AdMob IDs, restoration/reconciliation rules, and sandbox/device test matrix.
+1. Create the six products in App Store Connect, select final tiers/territories, and attach them to the intended app/version.
+2. Run StoreKit sandbox/device tests for success, cancellation, pending/Ask to Buy, duplicate callback, interrupted delivery, unfinished reconciliation, restore, reinstall, offline launch, and revoked/refunded Remove Ads.
+3. Create the production AdMob app and interstitial unit; replace the sample app ID and set the production unit ID.
+4. Decide age/territory treatment and implement/approve the required UMP consent flow before enabling production ads.
+5. Complete legal review of the privacy policy and App Privacy answers against the final SDK/data behavior.
+6. Prove loss-only timing, caps, no-fill, background/foreground, orientation, and Remove Ads suppression on a physical device.
+7. Obtain explicit approval before upload, submission, pricing, distribution, or release.

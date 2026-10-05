@@ -9,9 +9,12 @@ A separate level-based edition of Mook. The original endless score-chaser remain
 - Persistent unlock progress in the browser
 - Every clear awards one to four stars from remaining lives; each level permanently keeps its best star result
 - Level-clear cards animate the point total and earned stars and wait for the player to continue
-- Every level starts with a briefing and unlimited test power-ups for that run
+- Every level starts with a briefing and counted, device-local power-up inventory
 - Sky God clears blue swipes, Sun God clears yellow holds, and Rock God breaks gray rocks automatically
 - Time Slow runs game time at 75% speed, stretching the same 30 game seconds to 40 real seconds
+- Four-star clears award one deterministic power-up once per level; StoreKit-ready direct packs can add stockpile inventory
+- Endless Play unlocks after World 5 with progressive mechanics, two-minute checkpoints, one continue, and a local high score
+- The iOS app contains StoreKit 2 and gated AdMob bridges; production products, ads, consent, and release remain externally gated
 - Every level opens with a hands-on world-specific interaction and waits for the player
 - Openers progress through green tap, blue swipe, yellow hold, three-hit rock, purple tap, opposite red tap, and quantum red-to-green change
 - Difficulty rises across each set of 10 levels
