@@ -1,0 +1,40 @@
+const fs = require('node:fs');
+const assert = require('node:assert/strict');
+
+const read = path => fs.readFileSync(path, 'utf8');
+const commerce = read('ios/App/App/MookCommercePlugin.swift');
+const ads = read('ios/App/App/MookAdsPlugin.swift');
+const bridge = read('ios/App/App/MookBridgeViewController.swift');
+const plist = read('ios/App/App/Info.plist');
+const podfile = read('ios/App/Podfile');
+const podlock = read('ios/App/Podfile.lock');
+const project = read('ios/App/App.xcodeproj/project.pbxproj');
+const monetization = read('docs/MONETIZATION.md');
+
+const productIDs = [
+  'com.pointform.mookworlds.power.sky.5',
+  'com.pointform.mookworlds.power.sun.5',
+  'com.pointform.mookworlds.power.rock.5',
+  'com.pointform.mookworlds.power.time.5',
+  'com.pointform.mookworlds.power.bundle.12',
+  'com.pointform.mookworlds.removeads'
+];
+for (const id of productIDs) {
+  assert.match(commerce, new RegExp(id.replaceAll('.', '\\.')));
+  assert.match(monetization, new RegExp(id.replaceAll('.', '\\.')));
+}
+assert.match(commerce, /VerificationResult/);
+assert.match(commerce, /Transaction\.unfinished/);
+assert.match(commerce, /await transaction\.finish\(\)/);
+assert.match(commerce, /AppStore\.sync\(\)/);
+assert.match(ads, /ca-app-pub-3940256099942544\/4411468910/);
+assert.match(ads, /#if DEBUG/);
+assert.match(ads, /MookAdsEnabled/);
+assert.match(plist, /ca-app-pub-3940256099942544~1458002511/);
+assert.match(plist, /<key>MookAdsEnabled<\/key>\s*<false\/>/);
+assert.match(podfile, /Google-Mobile-Ads-SDK/);
+assert.match(podlock, /Google-Mobile-Ads-SDK \(12\.14\.0\)/);
+assert.match(bridge, /registerPluginType\(MookCommercePlugin\.self\)/);
+assert.match(bridge, /registerPluginType\(MookAdsPlugin\.self\)/);
+for (const file of ['MookBridgeViewController.swift','MookCommercePlugin.swift','MookAdsPlugin.swift']) assert.match(project, new RegExp(file.replace('.', '\\.')));
+console.log(JSON.stringify({ok:true,products:productIDs.length,admob:'test-only-debug',releaseAdsEnabled:false}));

@@ -22,6 +22,13 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- Official Google sample ID. Replace during the separately gated production AdMob setup. -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<key>MookAdsEnabled</key>
+	<false/>
+	<key>MookAdMobInterstitialID</key>
+	<string></string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

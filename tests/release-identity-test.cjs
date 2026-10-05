@@ -17,6 +17,7 @@ assert.match(capacitor, /appId: 'com\.skygardenapps\.mookworlds'/);
 assert.equal((project.match(/PRODUCT_BUNDLE_IDENTIFIER = com\.skygardenapps\.mookworlds;/g) || []).length, 2);
 assert.equal((project.match(/DEVELOPMENT_TEAM = 588GPA4GL2;/g) || []).length, 2);
 assert.equal((project.match(/CODE_SIGN_STYLE = Automatic;/g) || []).length, 2);
+assert.equal((project.match(/MARKETING_VERSION = 1\.1;/g) || []).length, 2);
 assert.doesNotMatch(project, /PROVISIONING_PROFILE_SPECIFIER/);
 assert.match(metadata, /Bundle ID:\*\* `com\.skygardenapps\.mookworlds`/);
 assert.match(checklist, /Register bundle ID `com\.skygardenapps\.mookworlds` on team `588GPA4GL2`/);
