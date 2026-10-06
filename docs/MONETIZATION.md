@@ -48,6 +48,7 @@ Fallback prices are preview copy only. StoreKit's localized displayPrice replace
 - Debug builds use Google's official iOS sample app ID and interstitial test unit.
 - Production AdMob identifiers are installed in the Release configuration, but Release builds remain disabled while MookAdsEnabled is false.
 - UMP refreshes consent information before Google Mobile Ads starts, presents a required consent form, and blocks ad requests unless the SDK reports that ads may be requested.
+- Mook Worlds is classified as general audience, so every UMP consent-information request explicitly sends the under-age-of-consent tag as false (`isTaggedForUnderAgeOfConsent = false` in Swift).
 - A Privacy choices control appears when UMP reports that privacy options are required.
 - “Playable” creative is not promised. The integration requests ordinary interstitial demand; creative and mediation inventory determine what appears.
 - Rewarded ads are not exposed in v1.1.

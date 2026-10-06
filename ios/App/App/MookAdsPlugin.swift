@@ -33,7 +33,9 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
             return
         }
 
-        ConsentInformation.shared.requestConsentInfoUpdate(with: RequestParameters()) { [weak self] error in
+        let consentParameters = RequestParameters()
+        consentParameters.isTaggedForUnderAgeOfConsent = false
+        ConsentInformation.shared.requestConsentInfoUpdate(with: consentParameters) { [weak self] error in
             guard let self else { return }
             if let error {
                 call.resolve([
