@@ -1,46 +1,64 @@
-version: 1
+version: 2
 release:
   product: Mook Worlds
-  app_store_name: "Mook Worlds: Puzzle Adventure"
-  version: "1.0"
-  build: "1"
-  commit: 09df2251d7b6732bc1f84da67d74a56d05783c50
-checked_at: 2026-08-27
+  app_store_name: Mook Worlds
+  version: '1.1'
+  source_revision: 804536a
+  prepared_at: '2026-10-06'
 official_sources:
   apple_screenshots: https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/
 supported_destinations: [apple_app_store_ios]
 locales: [en-US]
 brand:
-  system_path: /Users/pointform/Projects/mook-levels/www/index.html
-  screenshot_expert_gen: app-store-asset-production
+  system_path: /Users/pointform/Projects/mook-levels/index.html
+  prior_campaign_source: Screenshot Expert Gen
+  revision: v1.1-native-canvas
 capture:
-  release_build_verified: true
-  raw_capture_root: raw-captures/ios/iphone-6.5/en-US
+  source_backed: true
+  raw_capture_roots:
+    - raw-captures/ios/iphone-6.9/en-US
+    - raw-captures/ios/ipad-13/en-US
+  iap_review_root: ../AppStore/IAPReviewScreenshots
+  commerce_catalog_harness: Uses the six live approved product IDs and US display prices to render the checked-in native Store UI; no unavailable feature is depicted.
 assets:
-  - display_group: iphone_6_5
-    dimensions: 1242x2688
+  - display_group: iphone_6_9
+    app_store_connect_display_type: APP_IPHONE_67
+    dimensions: 1320x2868
     format: baseline_jpeg
-    files:
-      - exports/apple/iphone-6.5/en-US/apple-iphone65-en-US-01-seventy-level-adventure-1242x2688.jpg
-      - exports/apple/iphone-6.5/en-US/apple-iphone65-en-US-02-new-rules-every-world-1242x2688.jpg
-      - exports/apple/iphone-6.5/en-US/apple-iphone65-en-US-03-tap-swipe-hold-break-1242x2688.jpg
-      - exports/apple/iphone-6.5/en-US/apple-iphone65-en-US-04-earn-four-stars-1242x2688.jpg
-      - exports/apple/iphone-6.5/en-US/apple-iphone65-en-US-05-play-anywhere-1242x2688.jpg
+    count: 5
+    path: exports/apple/iphone-6.9/en-US
+  - display_group: ipad_13
+    app_store_connect_display_type: APP_IPAD_PRO_3GEN_129
+    dimensions: 2064x2752
+    format: baseline_jpeg
+    count: 5
+    path: exports/apple/ipad-13/en-US
+  - display_group: iap_review
+    dimensions: 1290x2796
+    format: baseline_jpeg
+    count: 6
+    path: ../AppStore/IAPReviewScreenshots
 validation:
   dimensions: passed
-  formats: passed
-  alpha: not_applicable_jpeg
+  formats: passed_baseline_jpeg
+  alpha: passed_no_alpha
   colour_profile: passed_rgb
-  file_sizes: passed
-  pii_and_secrets: passed
-  claim_accuracy: passed
-  manifest_coverage: passed
-approval:
-  contact_sheet: contact-sheets/mook-worlds-ios-en-US-r1.jpg
-  revision: r1
-  adam_approved: true
-  approved_at: 2026-08-27
-handoff:
-  mobile_app_publishing_accepted: true
+  source_aspect_ratio: passed_contain_no_distortion
+  critical_ui_clipping: passed_visual_inspection
+  order: passed_01_through_05
+  counts: passed_5_iphone_5_ipad_6_iap
+  claim_accuracy: passed_source_readback
+  app_store_delivery: passed_complete
+store_staging:
+  version_id: c91aec90-c6b5-49dd-8c2d-c5852c0d3858
+  localization_id: ea3fe867-536e-4aa4-945b-cd9d829ebd13
+  iphone_set_id: 8cd79041-0269-480d-ad10-534e20a36863
+  ipad_set_id: 7a4d6379-27b9-40c5-8b40-365805621f9f
   uploaded: true
-  console_render_verified: true
+  console_readback_verified: true
+approval:
+  contact_sheets:
+    - contact-sheets/mook-worlds-ios-en-US-v1.1-iphone-6.9.jpg
+    - contact-sheets/mook-worlds-ios-en-US-v1.1-ipad-13.jpg
+  staged_for_owner_review: true
+  owner_approved: false
