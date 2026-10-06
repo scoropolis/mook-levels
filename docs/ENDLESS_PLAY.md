@@ -4,7 +4,7 @@ Status: **implemented locally; external release proof still required**
 
 ## Player promise
 
-Endless Play unlocks after all ten World 5 levels are complete. It is a high-score survival run that escalates until four misses end the attempt.
+Endless Play is selected from the opening title screen and unlocks at 100 total stars across persisted per-level best scores. The locked title option shows `max(0, 100 - totalBestStars)` and enables exactly at 100 or more; there is no duplicate unlock counter. It is a high-score survival run that escalates until four misses end the attempt.
 
 ## v1.1 rules and balance
 

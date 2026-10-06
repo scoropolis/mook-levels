@@ -16,7 +16,7 @@ Master 70 handcrafted levels, build your power-up inventory, and unlock an escal
 
 ## What's New
 
-Build your inventory with earned and optional power-ups, unlock Endless Play after World 5, and explore a clearer world map with clouded progression.
+Build your inventory with earned and optional power-ups, unlock Endless Play at 100 total stars, and climb a clearer world map with clouded progression.
 
 ## Description
 
@@ -38,7 +38,7 @@ Equip Sky God, Sun God, Rock God, or Time Slow before a level. Earn power-ups by
 
 **Endless Play**
 
-Complete World 5 to unlock an escalating run with new mechanics, checkpoint continues, and a saved high score.
+Earn 100 total best-score stars to unlock an escalating run with new mechanics, checkpoint continues, and a saved high score.
 
 **Earn every star**
 
@@ -58,7 +58,7 @@ reaction,reflex,arcade,puzzle,tap,swipe,levels,casual,offline,challenge
 
 ## App Review notes
 
-Mook Worlds is a portrait arcade game with no account requirement. From the world map, select an available level, optionally equip saved power-ups, and press **Start level**. Complete World 5 to reveal Endless Play.
+Mook Worlds is a portrait arcade game with no account requirement. From the opening screen, choose **Mook Worlds** to enter the ascending world map or unlock **Endless Play** by earning 100 total best-score stars. Select an available level, optionally equip saved power-ups, and press **Start level**.
 
 Tap **Store** on the world map to view the six in-app purchases. The four five-packs add five units of the named power-up. The variety pack adds three of each power-up (12 total). These consumables are stored locally and are not restorable. Remove Ads is a non-consumable entitlement and can be restored with **Restore Remove Ads**.
 

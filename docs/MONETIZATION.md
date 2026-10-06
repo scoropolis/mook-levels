@@ -7,7 +7,9 @@ The six StoreKit product records and one loss-only interstitial unit are configu
 ## Power-up economy
 
 - Power-ups are typed consumable balances: sky, sun, rock, and time.
-- New and pre-economy installs receive a one-time starter migration of five units of each type.
+- New and pre-economy installs receive a one-time starter migration of one unit of each type. Existing version-1 economy records retain their exact saved balances, rewards, and ledger.
+- Each power becomes available with its matching world: Time Slow in Green Valley (World 1), Sky God in Sky Current (World 2), Sun God in Sunhold Sands (World 3), and Rock God in Rock Summit (World 4).
+- A locked power cannot be equipped or purchased. The mixed 12-item pack becomes purchasable when all four powers are unlocked in World 4. Inventory already granted by a verified transaction remains saved even while a contained power is locked.
 - Selecting a power does not consume it. All selected powers are consumed atomically when play begins.
 - Balances may stockpile without an app-imposed cap in v1.1.
 - A four-star clear earns exactly one power-up the first time that level achieves the reward. The deterministic world mapping is:
@@ -27,14 +29,14 @@ The iOS app includes a local MookCommerce Capacitor bridge. It loads products, v
 
 | Product ID | Type | App-side delivery | Provisional display intent |
 | --- | --- | --- | --- |
-| com.skygardenapps.mookworlds.power.sky.5 | Consumable | Sky God ×5 | $0.99 TBD |
-| com.skygardenapps.mookworlds.power.sun.5 | Consumable | Sun God ×5 | $0.99 TBD |
-| com.skygardenapps.mookworlds.power.rock.5 | Consumable | Rock God ×5 | $0.99 TBD |
-| com.skygardenapps.mookworlds.power.time.5 | Consumable | Time Slow ×5 | $0.99 TBD |
-| com.skygardenapps.mookworlds.power.bundle.12 | Consumable | Three of every type | $1.99 TBD |
-| com.skygardenapps.mookworlds.removeads | Non-consumable | Suppress interstitials | $2.99 TBD |
+| com.skygardenapps.mookworlds.power.sky.5 | Consumable | Sky God ×5 | US $0.99-equivalent tier |
+| com.skygardenapps.mookworlds.power.sun.5 | Consumable | Sun God ×5 | US $0.99-equivalent tier |
+| com.skygardenapps.mookworlds.power.rock.5 | Consumable | Rock God ×5 | US $0.99-equivalent tier |
+| com.skygardenapps.mookworlds.power.time.5 | Consumable | Time Slow ×5 | US $0.99-equivalent tier |
+| com.skygardenapps.mookworlds.power.bundle.12 | Consumable | Power-Up Variety Pack: three of every type (12 total) | US $1.99-equivalent tier |
+| com.skygardenapps.mookworlds.removeads | Non-consumable | Remove Ads | US $2.99-equivalent tier |
 
-Fallback prices are preview copy only. StoreKit's localized displayPrice replaces them when configured. Products and territory prices must be created separately in App Store Connect.
+These US prices and equivalent tiers were verified in App Store Connect on October 5, 2026 across the app's 175 territories. StoreKit's localized `displayPrice` replaces the in-app US fallback copy.
 
 ## AdMob policy and implementation
 
