@@ -5,6 +5,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const capacitor = fs.readFileSync(path.join(root, 'capacitor.config.ts'), 'utf8');
 const project = fs.readFileSync(path.join(root, 'ios/App/App.xcodeproj/project.pbxproj'), 'utf8');
+const infoPlist = fs.readFileSync(path.join(root, 'ios/App/App/Info.plist'), 'utf8');
 const metadata = fs.readFileSync(path.join(root, 'AppStore/METADATA.md'), 'utf8');
 const checklist = fs.readFileSync(path.join(root, 'AppStore/RELEASE_CHECKLIST.md'), 'utf8');
 
@@ -19,6 +20,7 @@ assert.equal((project.match(/DEVELOPMENT_TEAM = 588GPA4GL2;/g) || []).length, 2)
 assert.equal((project.match(/CODE_SIGN_STYLE = Automatic;/g) || []).length, 2);
 assert.equal((project.match(/MARKETING_VERSION = 1\.1;/g) || []).length, 2);
 assert.doesNotMatch(project, /PROVISIONING_PROFILE_SPECIFIER/);
+assert.match(infoPlist, /<key>UIRequiresFullScreen<\/key>\s*<true\/>/);
 assert.match(metadata, /Bundle ID:\*\* `com\.skygardenapps\.mookworlds`/);
 assert.match(checklist, /Register bundle ID `com\.skygardenapps\.mookworlds` on team `588GPA4GL2`/);
 
