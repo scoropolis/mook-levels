@@ -17,6 +17,23 @@ let browser;
   });
   await page.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
 
+  assert.equal(await page.locator('#titleScreen').getAttribute('class'), 'screen title-screen active');
+  assert.deepEqual(await page.locator('.title-option').allTextContents(), ['Mook WorldsContinue the world journey','Endless Play100 ★ to unlock'], 'the title screen has exactly two primary options');
+  assert.equal(await page.locator('#endlessButton').isDisabled(), true);
+  assert.match(await page.locator('#endlessButton').getAttribute('aria-label'), /locked.*100 stars/);
+  for (const starCase of [{total:99,remaining:'1 ★ to unlock',enabled:false},{total:100,remaining:'Unlocked · 100 ★ earned',enabled:true},{total:104,remaining:'Unlocked · 104 ★ earned',enabled:true}]) {
+    const starPage = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    await starPage.addInitScript(total => {const scores={};let remaining=total;for(let level=1;remaining>0;level+=1){scores[level]=Math.min(4,remaining);remaining-=scores[level];}localStorage.setItem('mook-worlds-stars',JSON.stringify(scores));}, starCase.total);
+    await starPage.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
+    const starState=await starPage.evaluate(() => window.__mookLevels.getState());
+    assert.equal(starState.totalStars,starCase.total,'persisted best stars are the sole Endless unlock source');
+    assert.equal(starState.endlessUnlocked,starCase.enabled);
+    assert.equal(await starPage.locator('#endlessRequirement').textContent(),starCase.remaining);
+    assert.equal(await starPage.locator('#endlessButton').isEnabled(),starCase.enabled);
+    if(starCase.total===100){await starPage.click('#endlessButton');assert.equal((await starPage.evaluate(() => window.__mookLevels.getState())).isEndless,true,'Endless opens exactly at 100 stars');}
+    await starPage.close();
+  }
+  await page.click('#worldsButton');
   assert.equal(await page.locator('.level-node').count(), 70, 'world map should render 70 levels');
   assert.equal(await page.locator('.level-node.unlocked').count(), 1, 'only level one starts unlocked');
   assert.match(await page.locator('#mapTitle').textContent(), /Green Valley/);
@@ -28,9 +45,15 @@ let browser;
   assert.equal(await page.locator('.stage-card[data-world="2"] .level-node:enabled').count(), 0, 'fogged world levels must not be interactive');
   assert.match(await page.locator('.stage-card[data-world="2"] .stage-content').evaluate(element => getComputedStyle(element).filter), /blur\(10px\)/);
   assert.equal(await page.locator('.stage-card[data-world="2"] .world-lock-badge span').textContent(), 'Complete World 1');
-  assert.equal(await page.locator('.endless-card.world-locked').count(), 1, 'Endless Play should begin clouded');
-  assert.match(await page.locator('.endless-card').getAttribute('aria-label'), /locked.*Complete World 5/);
-  assert.deepEqual(await page.locator('#mapWrap > .stage-card').evaluateAll(cards => cards.map(card => card.dataset.world || card.dataset.destination)), ['1','2','3','4','5','endless','6','7'], 'Endless Play should sit after World 5');
+  assert.equal(await page.locator('.endless-card').count(), 0, 'Endless Play has no world-map entry point');
+  assert.deepEqual(await page.locator('#mapWrap > .stage-card').evaluateAll(cards => cards.map(card => card.dataset.world)), ['7','6','5','4','3','2','1'], 'worlds are ordered top-down so progression ascends from World 1');
+  const firstWorldPath = await page.locator('.stage-card[data-world="1"] .level-node').evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().top));
+  assert.ok(firstWorldPath[0] > firstWorldPath.at(-1), 'level paths wind upward from Level 1 to Level 10');
+  assert.equal(await page.locator('.route-line').count(), 7);
+  assert.equal(await page.locator('.mook-marker').count(), 1, 'exactly one Mook marks the current level');
+  assert.match(await page.locator('.level-node.current').getAttribute('aria-label'), /current level/);
+  assert.equal(await page.locator('.mook-marker img').evaluate(image => image.complete && image.naturalWidth === 128 && getComputedStyle(image).backgroundColor === 'rgba(0, 0, 0, 0)'), true, 'optimized transparent Mook marker loads without a black CSS background');
+  assert.deepEqual(await page.locator('.mook-marker img').evaluate(image => {const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;const context=canvas.getContext('2d');context.drawImage(image,0,0);return [[0,0],[127,0],[0,127],[127,127]].map(([x,y])=>context.getImageData(x,y,1,1).data[3]);}),[0,0,0,0],'marker corners retain transparent alpha instead of a black matte');
 
   const persistedPage = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await persistedPage.addInitScript(() => {
@@ -39,6 +62,7 @@ let browser;
     localStorage.setItem('mook-worlds-stars', '{}');
   });
   await persistedPage.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
+  await persistedPage.click('#worldsButton');
   assert.equal(await persistedPage.locator('.stage-card[data-world="2"]').getAttribute('class'), 'stage-card stage-blue', 'persisted completion should clear the next world without stars');
   assert.equal(await persistedPage.locator('.stage-card[data-world="2"] .world-lock').count(), 0);
   assert.equal(await persistedPage.locator('.stage-card[data-world="3"]').getAttribute('class'), 'stage-card stage-yellow world-locked');
@@ -48,9 +72,80 @@ let browser;
   const inconsistentPage = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await inconsistentPage.addInitScript(() => localStorage.setItem('mook-worlds-unlocked', '11'));
   await inconsistentPage.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
+  await inconsistentPage.click('#worldsButton');
   assert.equal(await inconsistentPage.locator('.stage-card[data-world="2"] .level-node:enabled').count(), 0);
   assert.equal(await inconsistentPage.locator('#mapTitle').textContent(), 'Complete World 1 to reveal the next world', 'stale unlock data must not expose a locked world title');
   await inconsistentPage.close();
+
+  const existingEconomy = {
+    version: 1,
+    balances: {sky:7,sun:0,rock:12,time:3},
+    awardedLevels: {'4':'time','13':'sky'},
+    ledger: [{id:'saved-purchase',kind:'purchase',at:123,delta:{sky:5}}]
+  };
+  const savedEconomyPage = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  await savedEconomyPage.addInitScript(saved => localStorage.setItem('mook-worlds-economy-v1', JSON.stringify(saved)), existingEconomy);
+  await savedEconomyPage.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
+  const preservedEconomy = (await savedEconomyPage.evaluate(() => window.__mookLevels.getState())).economy;
+  assert.deepEqual(preservedEconomy, existingEconomy, 'existing version-1 balances, rewards, and ledger must be preserved exactly');
+  await savedEconomyPage.close();
+
+  const gatingPage = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  await gatingPage.addInitScript(() => {
+    localStorage.clear();
+    window.__gatePurchases = [];
+    window.Capacitor = { Plugins: { MookCommerce: {
+      getProducts: async ({ids}) => ({products:ids.map(id => ({id,displayPrice:'$0.99'})),removeAds:false,pending:[]}),
+      purchase: async ({productId}) => { window.__gatePurchases.push(productId); return {cancelled:true,deliveries:[]}; },
+      restore: async () => ({removeAds:false,pending:[]})
+    } } };
+  });
+  await gatingPage.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
+  await gatingPage.click('#worldsButton');
+  assert.deepEqual((await gatingPage.evaluate(() => window.__mookLevels.getState())).economy.balances, {sky:1,sun:1,rock:1,time:1}, 'new players start with exactly one of every power');
+  await gatingPage.click('#storeButton');
+  await gatingPage.evaluate(() => document.querySelector('.product-button[data-product="com.skygardenapps.mookworlds.power.sky.5"]').dispatchEvent(new MouseEvent('click',{bubbles:true})));
+  assert.deepEqual(await gatingPage.evaluate(() => window.__gatePurchases), [], 'a locked pack cannot reach the StoreKit purchase bridge');
+  assert.match(await gatingPage.locator('#storeStatus').textContent(), /Unlock Sky Current/);
+  await gatingPage.click('#storeClose');
+  const gateCases = [
+    {through:1,level:1,enabled:['time']},
+    {through:11,level:11,enabled:['time','sky']},
+    {through:21,level:21,enabled:['time','sky','sun']},
+    {through:31,level:31,enabled:['time','sky','sun','rock']}
+  ];
+  for (const gate of gateCases) {
+    await gatingPage.evaluate(({through,level}) => { window.__mookLevels.returnToMap(); window.__mookLevels.unlockThroughForTest(through); window.__mookLevels.selectLevel(level); }, gate);
+    for (const power of ['sky','sun','rock','time']) {
+      const card = gatingPage.locator(`.power-card[data-power="${power}"]`);
+      const available = gate.enabled.includes(power);
+      assert.equal(await card.isEnabled(), available, `${power} availability should match the unlocked world at level ${gate.level}`);
+      assert.equal((await card.locator('.inventory-count').textContent()).startsWith(available?'×':'🔒'), true, `${power} should render the correct quantity or lock badge`);
+      assert.match(await card.getAttribute('aria-label'), available?/available/:/locked until/, `${power} should expose an accessible state`);
+    }
+    await gatingPage.evaluate(() => document.querySelector('.power-card[data-power="rock"]').dispatchEvent(new MouseEvent('click',{bubbles:true})));
+    if (!gate.enabled.includes('rock')) assert.equal((await gatingPage.evaluate(() => window.__mookLevels.getState())).equippedPowers.includes('rock'), false, 'a locked power cannot be equipped even by a synthetic click');
+    await gatingPage.evaluate(() => window.__mookLevels.returnToMap());
+    await gatingPage.click('#storeButton');
+    const expectedPurchasable = new Set(gate.enabled.map(power => `com.skygardenapps.mookworlds.power.${power}.5`));
+    expectedPurchasable.add('com.skygardenapps.mookworlds.removeads');
+    if (gate.enabled.length === 4) expectedPurchasable.add('com.skygardenapps.mookworlds.power.bundle.12');
+    for (const id of ['com.skygardenapps.mookworlds.power.sky.5','com.skygardenapps.mookworlds.power.sun.5','com.skygardenapps.mookworlds.power.rock.5','com.skygardenapps.mookworlds.power.time.5','com.skygardenapps.mookworlds.power.bundle.12','com.skygardenapps.mookworlds.removeads']) {
+      assert.equal(await gatingPage.locator(`.product-button[data-product="${id}"]`).isEnabled(), expectedPurchasable.has(id), `store gating should match unlocked worlds for ${id}`);
+    }
+    await gatingPage.click('#storeClose');
+  }
+  await gatingPage.close();
+
+  const ipadPage = await browser.newPage({ viewport: { width: 1024, height: 1366 }, isMobile: true, hasTouch: true });
+  await ipadPage.emulateMedia({reducedMotion:'reduce'});
+  await ipadPage.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
+  await ipadPage.click('#worldsButton');
+  const ipadLayout = await ipadPage.evaluate(() => ({app:document.querySelector('.app').getBoundingClientRect().width,world:document.querySelector('.stage-card[data-world="1"]').getBoundingClientRect().width,path:document.querySelector('.level-path').getBoundingClientRect().height,markerDuration:parseFloat(getComputedStyle(document.querySelector('.mook-marker')).animationDuration)}));
+  assert.equal(ipadLayout.app,820,'the journey uses a bounded iPad canvas');
+  assert.ok(ipadLayout.world<=700&&ipadLayout.path>=580,'world sections and ascending paths scale for iPad');
+  assert.ok(ipadLayout.markerDuration<.01,'reduced motion suppresses marker animation');
+  await ipadPage.close();
 
   assert.deepEqual(await page.evaluate(() => [0,1,2,3,4].map(window.__mookLevels.starsForMisses)), [4,3,2,1,0]);
   const configs = await page.evaluate(() => Array.from({ length: 70 }, (_, index) => window.__mookLevels.getLevelConfig(index + 1)));
@@ -120,10 +215,10 @@ let browser;
   assert.match(await page.locator('#introTitle').textContent(), /Green Valley/);
   assert.match(await page.locator('#introSummary').textContent(), /30 game seconds/);
   assert.deepEqual(await page.locator('.power-card').allTextContents(), [
-    'Sky GodAuto-clears every blue swipe5 owned',
-    'Sun GodAuto-completes every yellow hold5 owned',
-    'Rock GodAuto-breaks every gray rock5 owned',
-    'Time SlowSlows game time by 25%5 owned'
+    'Sky GodAuto-clears every blue swipe🔒 World 2',
+    'Sun GodAuto-completes every yellow hold🔒 World 3',
+    'Rock GodAuto-breaks every gray rock🔒 World 4',
+    'Time SlowSlows game time by 25%×1'
   ]);
   await page.click('.power-card[data-power="time"]');
   assert.equal(await page.locator('.power-card[data-power="time"]').getAttribute('aria-pressed'), 'true');
@@ -174,7 +269,7 @@ let browser;
   assert.equal((await page.evaluate(() => window.__mookLevels.getState())).starScores['1'], 4);
 
   // A weaker replay shows its own award but never lowers the stored best stars.
-  await page.click('.level-node[data-level="1"]', { force: true });
+  await page.evaluate(() => window.__mookLevels.selectLevel(1));
   await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
   await page.evaluate(index => window.__mookLevels.tap(index), state.active[0]);
@@ -193,7 +288,7 @@ let browser;
   assert.equal(await page.locator('.level-node[data-level="1"] .level-stars').textContent(), '★★★★');
 
   for (let level = 2; level <= 10; level++) {
-    await page.click(`.level-node[data-level="${level}"]`, { force: true });
+    await page.evaluate(level => window.__mookLevels.selectLevel(level), level);
     await page.click('#introStart');
     await page.evaluate(() => window.__mookLevels.finishLevelForTest(true));
   }
@@ -201,8 +296,7 @@ let browser;
   assert.equal(await page.locator('.stage-card[data-world="2"] .world-lock').count(), 0);
   assert.equal(await page.locator('.stage-card[data-world="2"] .level-node[data-level="11"]:enabled').count(), 1);
 
-  await page.evaluate(() => window.__mookLevels.unlockThroughForTest(11));
-  await page.click('.level-node[data-level="11"]', { force: true });
+  await page.evaluate(() => { window.__mookLevels.unlockThroughForTest(11); window.__mookLevels.selectLevel(11); });
   await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboardingType, 'blue');
@@ -217,7 +311,7 @@ let browser;
 
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(21));
-  await page.click('.level-node[data-level="21"]', { force: true });
+  await page.evaluate(() => window.__mookLevels.selectLevel(21));
   await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboardingType, 'yellow');
@@ -240,7 +334,7 @@ let browser;
 
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(31));
-  await page.click('.level-node[data-level="31"]', { force: true });
+  await page.evaluate(() => window.__mookLevels.selectLevel(31));
   await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboardingType, 'rock');
@@ -255,7 +349,7 @@ let browser;
 
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(20));
-  await page.click('.level-node[data-level="20"]', { force: true });
+  await page.evaluate(() => window.__mookLevels.selectLevel(20));
   await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboardingType, 'blue');
@@ -283,7 +377,7 @@ let browser;
   async function sampleRockHits(level, count) {
     await page.evaluate(() => window.__mookLevels.returnToMap());
     await page.evaluate(level => window.__mookLevels.unlockThroughForTest(level), level);
-    await page.click(`.level-node[data-level="${level}"]`, { force: true });
+    await page.evaluate(level => window.__mookLevels.selectLevel(level), level);
     await page.click('#introStart');
     let opening = (await page.evaluate(() => window.__mookLevels.getState())).rock[0];
     assert.equal(opening.hits, 3, `level ${level} should still open with a three-hit tutorial rock`);
@@ -316,7 +410,7 @@ let browser;
 
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(41));
-  await page.click('.level-node[data-level="41"]', { force: true });
+  await page.evaluate(() => window.__mookLevels.selectLevel(41));
   await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboardingType, 'purple');
@@ -362,11 +456,12 @@ let browser;
   // World 6: red is the positive tap, green is the trap, and arrows require the opposite swipe.
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(51));
-  assert.equal(await page.locator('.endless-card').getAttribute('class'), 'stage-card endless-card', 'World 5 completion should clear the Endless Play fog');
-  assert.equal(await page.locator('.endless-card .world-lock').count(), 0);
-  assert.equal(await page.locator('.endless-card .endless-status').textContent(), 'Play');
-  assert.equal(await page.locator('.endless-card').isEnabled(), true, 'the destination becomes playable after World 5');
-  await page.click('.level-node[data-level="51"]', { force: true });
+  assert.equal(await page.locator('.endless-card').count(), 0, 'unlocking World 6 does not add Endless to the map');
+  await page.click('#titleBack');
+  assert.equal(await page.locator('#endlessButton').isDisabled(), true, 'World 5 completion alone does not unlock Endless');
+  assert.equal(await page.locator('#endlessRequirement').textContent(), '60 ★ to unlock');
+  await page.click('#worldsButton');
+  await page.evaluate(() => window.__mookLevels.selectLevel(51));
   await page.click('#introStart');
   state = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(state.onboardingType, 'opposite');
@@ -394,7 +489,7 @@ let browser;
   assert.equal((await page.evaluate(() => window.__mookLevels.getState())).misses, missesBeforeOppositeTrap + 1);
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(53));
-  await page.click('.level-node[data-level="53"]', { force: true });
+  await page.evaluate(() => window.__mookLevels.selectLevel(53));
   await page.click('#introStart');
   const oppositeBlue = (await page.evaluate(() => window.__mookLevels.getState())).blue[0];
   assert.deepEqual([...new Set(await page.evaluate(() => window.__mookLevels.worldMixSequenceForTest(20)))].sort(), ['blue','green']);
@@ -405,14 +500,14 @@ let browser;
   assert.equal((await page.evaluate(() => window.__mookLevels.getState())).levelStarted, true);
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(58));
-  await page.click('.level-node[data-level="58"]', { force: true });
+  await page.evaluate(() => window.__mookLevels.selectLevel(58));
   await page.click('#introStart');
   assert.deepEqual([...new Set(await page.evaluate(() => window.__mookLevels.worldMixSequenceForTest(25)))].sort(), ['blue','green','purple','rock','yellow']);
 
   // World 7: colors and arrows physically flip at one second; rocks hide their strength until the first hit.
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(61));
-  await page.click('.level-node[data-level="61"]', { force: true });
+  await page.evaluate(() => window.__mookLevels.selectLevel(61));
   assert.deepEqual([...new Set(await page.evaluate(() => window.__mookLevels.worldMixSequenceForTest(20)))], ['green'], 'Quantum Level 1 should only schedule quantum red/green play');
   const quantumOpeningTrapMix=await page.evaluate(() => window.__mookLevels.redTrapSequenceForTest(12));
   assert.ok(quantumOpeningTrapMix.filter(Boolean).length>=2, 'Quantum Level 1 should pace in red cells that later become green');
@@ -467,7 +562,7 @@ let browser;
   // Quantum mechanics are introduced gradually rather than all appearing in Level 1.
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(63));
-  await page.click('.level-node[data-level="63"]', { force: true });
+  await page.evaluate(() => window.__mookLevels.selectLevel(63));
   await page.click('#introStart');
   let stagedQuantum=await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(stagedQuantum.onboardingType,'blue');
@@ -478,7 +573,7 @@ let browser;
 
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(67));
-  await page.click('.level-node[data-level="67"]', { force: true });
+  await page.evaluate(() => window.__mookLevels.selectLevel(67));
   await page.click('#introStart');
   stagedQuantum=await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(stagedQuantum.onboardingType,'rock');
@@ -487,14 +582,14 @@ let browser;
 
   await page.evaluate(() => window.__mookLevels.returnToMap());
   await page.evaluate(() => window.__mookLevels.unlockThroughForTest(68));
-  await page.click('.level-node[data-level="68"]', { force: true });
+  await page.evaluate(() => window.__mookLevels.selectLevel(68));
   assert.deepEqual([...new Set(await page.evaluate(() => window.__mookLevels.worldMixSequenceForTest(25)))].sort(),['blue','green','purple','rock','yellow']);
 
   // Counted Gods automatically clear their matching cells for one selected level only.
   async function verifyGod(level, power, type, settleMs) {
     await page.evaluate(() => window.__mookLevels.returnToMap());
     await page.evaluate(level => window.__mookLevels.unlockThroughForTest(level), level);
-    await page.click(`.level-node[data-level="${level}"]`, { force: true });
+    await page.evaluate(level => window.__mookLevels.selectLevel(level), level);
     assert.equal((await page.evaluate(() => window.__mookLevels.getState())).equippedPowers.length, 0, 'power-ups reset for each run');
     await page.click(`.power-card[data-power="${power}"]`);
     await page.click('#introStart');
@@ -522,6 +617,7 @@ let browser;
     localStorage.clear();
     localStorage.setItem('mook-worlds-unlocked', '51');
     localStorage.setItem('mook-worlds-completed', JSON.stringify(Object.fromEntries(Array.from({length:50},(_,index)=>[String(index+1),1]))));
+    localStorage.setItem('mook-worlds-stars', JSON.stringify(Object.fromEntries(Array.from({length:25},(_,index)=>[String(index+1),4]))));
     window.__nativeCalls = { purchases: [], ads: 0, restores: 0, acknowledgements: [] };
     window.Capacitor = { Plugins: {
       MookCommerce: {
@@ -537,6 +633,7 @@ let browser;
     } };
   });
   await v11Page.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
+  await v11Page.click('#worldsButton');
   const endlessConfigs = await v11Page.evaluate(() => [0,30000,60000,90000,120000,240000].map(window.__mookLevels.getEndlessConfig));
   assert.deepEqual(endlessConfigs.map(item => item.mechanics), [
     ['green','red'],['green','red','blue'],['green','red','blue','yellow'],
@@ -544,23 +641,31 @@ let browser;
   ]);
   assert.equal(endlessConfigs.every((item,index,array) => index === 0 || item.beatMs <= array[index-1].beatMs), true, 'Endless cadence should continually intensify');
   let v11State = await v11Page.evaluate(() => window.__mookLevels.getState());
-  assert.deepEqual(v11State.economy.balances, {sky:5,sun:5,rock:5,time:5}, 'users without an economy record receive the versioned starter migration once');
+  assert.deepEqual(v11State.economy.balances, {sky:1,sun:1,rock:1,time:1}, 'users without an economy record receive one of each power exactly once');
   assert.equal(v11State.economy.ledger[0].kind, 'migration');
 
   await v11Page.evaluate(() => window.__mookLevels.setInventoryForTest({sky:1}));
-  await v11Page.click('.level-node[data-level="11"]', {force:true});
+  await v11Page.evaluate(() => window.__mookLevels.selectLevel(11));
   await v11Page.click('.power-card[data-power="sky"]');
   await v11Page.click('#introStart');
   v11State = await v11Page.evaluate(() => window.__mookLevels.getState());
   assert.equal(v11State.economy.balances.sky, 0, 'equipped inventory is consumed exactly when play begins');
   assert.equal(v11State.economy.ledger.at(-1).kind, 'consume');
   await v11Page.evaluate(() => window.__mookLevels.returnToMap());
-  await v11Page.click('.level-node[data-level="11"]', {force:true});
-  assert.equal(await v11Page.locator('.power-card[data-power="sky"]').isDisabled(), true, 'zero-stock powers cannot be equipped');
+  await v11Page.evaluate(() => window.__mookLevels.selectLevel(11));
+  const emptySky = v11Page.locator('.power-card[data-power="sky"]');
+  assert.equal(await emptySky.isEnabled(), true, 'an unlocked empty power remains an intentional store route');
+  assert.equal(await emptySky.locator('.inventory-count').textContent(), '＋ Get more');
+  assert.match(await emptySky.getAttribute('aria-label'), /empty, open the store/);
+  await emptySky.click();
+  assert.equal(await v11Page.locator('#storeOverlay').getAttribute('class'), 'store-overlay', 'tapping an empty power opens the store');
+  assert.equal(await v11Page.locator('.inventory-chip').filter({hasText:'Sky'}).locator('small').textContent(), 'Empty');
+  await v11Page.click('#storeClose');
   await v11Page.evaluate(() => window.__mookLevels.returnToMap());
 
-  assert.equal(await v11Page.locator('.endless-card').isEnabled(), true);
-  await v11Page.click('.endless-card');
+  await v11Page.click('#titleBack');
+  assert.equal(await v11Page.locator('#endlessButton').isEnabled(), true);
+  await v11Page.click('#endlessButton');
   assert.match(await v11Page.locator('#introSummary').textContent(), /checkpoints bank every 2 minutes/);
   await v11Page.click('#introStart');
   v11State = await v11Page.evaluate(() => window.__mookLevels.getState());

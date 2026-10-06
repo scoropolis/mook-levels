@@ -9,11 +9,14 @@ A separate level-based edition of Mook. The original endless score-chaser remain
 - Persistent unlock progress in the browser
 - Every clear awards one to four stars from remaining lives; each level permanently keeps its best star result
 - Level-clear cards animate the point total and earned stars and wait for the player to continue
-- Every level starts with a briefing and counted, device-local power-up inventory
+- Every level starts with a briefing and counted, device-local power-up inventory; new players receive one of each power and existing saved inventories are preserved
 - Sky God clears blue swipes, Sun God clears yellow holds, and Rock God breaks gray rocks automatically
 - Time Slow runs game time at 75% speed, stretching the same 30 game seconds to 40 real seconds
+- Powers unlock with their matching worlds: Time Slow in World 1, Sky God in World 2, Sun God in World 3, and Rock God in World 4; locked powers and packs cannot be used or purchased
+- The world journey is an upward-winding, cloud-revealed map with themed world sections and a current-level Mook marker
+- Current-level marker assets: `assets/mook-map-marker.png` (128 px) and `assets/mook-map-marker@2x.png` (256 px), optimized from the preserved generated transparent original
 - Four-star clears award one deterministic power-up once per level; StoreKit-ready direct packs can add stockpile inventory
-- Endless Play unlocks after World 5 with progressive mechanics, two-minute checkpoints, one continue, and a local high score
+- The opening screen offers Mook Worlds and Endless Play; Endless unlocks at 100 total best-score stars with a live remaining-star countdown, escalating mechanics, two-minute checkpoints, one continue, and a local high score
 - The iOS app contains StoreKit 2 and gated AdMob bridges; production products, ads, consent, and release remain externally gated
 - Every level opens with a hands-on world-specific interaction and waits for the player
 - Openers progress through green tap, blue swipe, yellow hold, three-hit rock, purple tap, opposite red tap, and quantum red-to-green change

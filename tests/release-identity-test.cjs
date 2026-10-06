@@ -24,4 +24,12 @@ assert.match(infoPlist, /<key>UIRequiresFullScreen<\/key>\s*<true\/>/);
 assert.match(metadata, /Bundle ID:\*\* `com\.skygardenapps\.mookworlds`/);
 assert.match(checklist, /Register bundle ID `com\.skygardenapps\.mookworlds` on team `588GPA4GL2`/);
 
+for (const [file,size] of [['mook-map-marker.png',128],['mook-map-marker@2x.png',256]]) {
+  const png=fs.readFileSync(path.join(root,'assets',file));
+  assert.equal(png.subarray(1,4).toString(),'PNG',`${file} must be a PNG`);
+  assert.equal(png.readUInt32BE(16),size,`${file} width`);
+  assert.equal(png.readUInt32BE(20),size,`${file} height`);
+  assert.equal(png[25],6,`${file} must retain RGBA transparency`);
+}
+
 console.log(JSON.stringify({ ok: true, bundleId: 'com.skygardenapps.mookworlds', team: '588GPA4GL2' }));
