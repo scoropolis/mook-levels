@@ -15,7 +15,7 @@ A separate level-based edition of Mook. The original endless score-chaser remain
 - Powers unlock with their matching worlds: Time Slow in World 1, Sky God in World 2, Sun God in World 3, and Rock God in World 4; locked powers and packs cannot be used or purchased
 - The world journey is an upward-winding, cloud-revealed map with themed world sections and a current-level Mook marker
 - Current-level marker assets: `assets/mook-map-marker.png` (128 px) and `assets/mook-map-marker@2x.png` (256 px), optimized from the preserved generated transparent original
-- Four-star clears award one deterministic power-up once per level; StoreKit-ready direct packs can add stockpile inventory
+- Level clears award stars and progression only; power-up inventory comes from the one-time starter grant or verified StoreKit purchases
 - The opening screen offers Mook Worlds and Endless Play; Endless unlocks at 100 total best-score stars with a live remaining-star countdown, escalating mechanics, two-minute checkpoints, one continue, and a local high score
 - The iOS app contains StoreKit 2 and gated AdMob bridges; production products, ads, consent, and release remain externally gated
 - Every level opens with a hands-on world-specific interaction and waits for the player

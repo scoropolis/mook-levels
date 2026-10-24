@@ -262,7 +262,10 @@ let browser;
   assert.ok(tempoRamp[0] < 82, 'Time Slow should also slow the soundtrack tempo');
 
   await page.evaluate(() => window.__mookLevels.finishLevelForTest(true));
-  assert.equal((await page.evaluate(() => window.__mookLevels.getState())).music.running, false, 'soundtrack should stop outside gameplay');
+  const firstClearState = await page.evaluate(() => window.__mookLevels.getState());
+  assert.equal(firstClearState.music.running, false, 'soundtrack should stop outside gameplay');
+  assert.equal(firstClearState.economy.balances.time, 0, 'completing a level must not silently grant another Time Slow');
+  assert.deepEqual(firstClearState.economy.awardedLevels, {}, 'level completion must not create hidden power-up awards');
   assert.equal(await page.locator('#mapScreen').getAttribute('class'), 'screen map-screen active');
   assert.equal(await page.locator('.level-node[data-level="2"]').getAttribute('class'), 'level-node unlocked current');
   assert.equal(await page.locator('.level-node[data-level="1"] .level-stars').textContent(), '★★★★');

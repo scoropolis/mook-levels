@@ -7,19 +7,12 @@ The six StoreKit product records and one loss-only interstitial unit are configu
 ## Power-up economy
 
 - Power-ups are typed consumable balances: sky, sun, rock, and time.
-- New and pre-economy installs receive a one-time starter migration of one unit of each type. Existing version-1 economy records retain their exact saved balances, rewards, and ledger.
+- New and pre-economy installs receive a one-time starter migration of one unit of each type. Existing version-1 economy records retain their exact saved balances and ledger, including any power-ups granted by older builds.
 - Each power becomes available with its matching world: Time Slow in Green Valley (World 1), Sky God in Sky Current (World 2), Sun God in Sunhold Sands (World 3), and Rock God in Rock Summit (World 4).
 - A locked power cannot be equipped or purchased. The mixed 12-item pack becomes purchasable when all four powers are unlocked in World 4. Inventory already granted by a verified transaction remains saved even while a contained power is locked.
 - Selecting a power does not consume it. All selected powers are consumed atomically when play begins.
 - Balances may stockpile without an app-imposed cap in v1.1.
-- A four-star clear earns exactly one power-up the first time that level achieves the reward. The deterministic world mapping is:
-  - Worlds 1 and 5: Time Slow
-  - World 2: Sky God
-  - World 3: Sun God
-  - World 4: Rock God
-  - World 6: Sky God
-  - World 7: Sun God
-- Rewards are not farmable: awarded level IDs are persisted.
+- Level completion and four-star scores do not grant power-ups. Stars control progression and Endless access; inventory changes only through the starter migration, consumption, or a verified StoreKit delivery.
 - Storage is versioned and contains typed balances plus a bounded transaction/reward ledger. A future token wallet can be added as another typed account without redefining existing balances.
 - Inventory is device-local. Consumables are not represented as restorable purchases and no cross-device inventory claim is made.
 

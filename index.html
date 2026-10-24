@@ -378,11 +378,7 @@
     if(Object.keys(delta).length)recordInventory(`use-${Date.now()}-${token}`,'consume',delta,{mode:isEndless?'endless':'level',level:currentLevel});
     return true;
   }
-  function performanceReward(level,stars){
-    if(stars!==4||economy.awardedLevels[level])return null;
-    const reward=['time','sky','sun','rock','time','sky','sun'][stageFor(level)]||'time';
-    economy.awardedLevels[level]=reward;recordInventory(`perfect-${level}`,'performance',{[reward]:1},{level});return reward;
-  }
+
   function renderInventory(){
     if(!economy)return;
     powerCards.forEach(card=>{const power=card.dataset.power;const count=economy.balances[power]||0;const unlocked=isPowerUnlocked(power);const unlock=POWER_UNLOCKS[power];const label=card.querySelector('.inventory-count');if(!unlocked)equippedPowers.delete(power);if(label){label.textContent=!unlocked?`🔒 World ${unlock.worldNumber}`:count?`×${count}`:'＋ Get more';label.classList.toggle('power-status-locked',!unlocked);label.classList.toggle('power-status-empty',unlocked&&count===0);}card.classList.toggle('power-locked',!unlocked);card.disabled=!unlocked;card.setAttribute('aria-label',!unlocked?`${card.querySelector('b').textContent}, locked until ${unlock.worldName}, World ${unlock.worldNumber}`:count?`${card.querySelector('b').textContent}, ${count} available`:`${card.querySelector('b').textContent}, empty, open the store to get more`);});
@@ -855,8 +851,8 @@
     if(!playing)return;const finishedLevel=currentLevel;const finalScore=score;const runStars=success?starsForMisses(misses):0;clearRun();
     resultLevel.textContent=`${STAGES[stageFor(finishedLevel)].name} · Level ${localLevel(finishedLevel)}`;resultScore.textContent=String(finalScore);resultStars.hidden=false;
     if(success){
-      completed[finishedLevel]=Math.max(Number(completed[finishedLevel])||0,finalScore);starScores[finishedLevel]=Math.max(Number(starScores[finishedLevel])||0,runStars);unlockedThrough=Math.max(unlockedThrough,Math.min(70,finishedLevel+1));persistProgress();const reward=performanceReward(finishedLevel,runStars);
-      resultCard.classList.add('celebrate');resultBadge.textContent='★';resultTitle.textContent=`Level ${localLevel(finishedLevel)} clear!`;resultCopy.textContent=`Best: ${starScores[finishedLevel]} stars. ${reward?`Perfect clear reward: +1 ${POWER_LABELS[reward]}. `:''}${finishedLevel===70?'Every Mook world is complete.':`Level ${localLevel(finishedLevel+1)} is now open.`}`;resultPrimary.textContent='World map';resultSecondary.textContent='Play again';
+      completed[finishedLevel]=Math.max(Number(completed[finishedLevel])||0,finalScore);starScores[finishedLevel]=Math.max(Number(starScores[finishedLevel])||0,runStars);unlockedThrough=Math.max(unlockedThrough,Math.min(70,finishedLevel+1));persistProgress();
+      resultCard.classList.add('celebrate');resultBadge.textContent='★';resultTitle.textContent=`Level ${localLevel(finishedLevel)} clear!`;resultCopy.textContent=`Best: ${starScores[finishedLevel]} stars. ${finishedLevel===70?'Every Mook world is complete.':`Level ${localLevel(finishedLevel+1)} is now open.`}`;resultPrimary.textContent='World map';resultSecondary.textContent='Play again';
     }else{
       resultCard.classList.remove('celebrate');resultBadge.textContent='×';resultTitle.textContent='Try again';resultCopy.textContent='Four misses. Learn the rhythm and take another run.';resultPrimary.textContent='Retry level';resultSecondary.textContent='World map';
     }
