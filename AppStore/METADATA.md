@@ -34,7 +34,7 @@ Read the eight-cell board and react with taps, swipes, holds, and timed multi-hi
 
 **Choose your powers**
 
-Equip Sky God, Sun God, Rock God, or Time Slow before a level. Earn power-ups by mastering levels or add optional packs from the Mook Store.
+Equip Sky God, Sun God, Rock God, or Time Slow before a level. Use your starter inventory or add optional packs from the Mook Store.
 
 **Endless Play**
 
