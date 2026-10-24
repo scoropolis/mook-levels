@@ -1,0 +1,12 @@
+{
+  "stage": "ASSET-3-IOS",
+  "status": "complete",
+  "release": "Mook Worlds 1.2 (3)",
+  "input_commit": "ac79d30",
+  "compiled_source_sha256": "c506d90563f051803d9c60c4431b601da6e4167678ed517927339cbf0da8d19b",
+  "compiled_source_matches_capture_source": true,
+  "outputs": ["raw-captures/ios/iphone-6.9/en-US", "raw-captures/ios/ipad-13/en-US"],
+  "capture_count": 10,
+  "limitations": ["Deterministic source-backed capture from bytes proven identical to the compiled Release app; not a physical-device capture"],
+  "next": "ASSET-4"
+}

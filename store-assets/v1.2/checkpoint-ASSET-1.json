@@ -1,0 +1,13 @@
+{
+  "stage": "ASSET-1",
+  "status": "complete",
+  "release": "Mook Worlds 1.2 (3)",
+  "input_commit": "ac79d30",
+  "seed_version": "mook-screenshot-v1.2-1",
+  "environment": "local deterministic game state",
+  "external_side_effects": false,
+  "fictional_pii": "none",
+  "outputs": ["sources/capture-v1.2-ui.mjs"],
+  "verified_state": ["46 completed levels", "mixed best stars", "bounded power inventory", "Endless high score"],
+  "next": "ASSET-2"
+}

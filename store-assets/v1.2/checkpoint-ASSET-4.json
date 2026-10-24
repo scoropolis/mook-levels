@@ -1,0 +1,11 @@
+{
+  "stage": "ASSET-4",
+  "status": "complete",
+  "release": "Mook Worlds 1.2 (3)",
+  "input_commit": "ac79d30",
+  "outputs": ["exports/apple/iphone-6.9/en-US", "exports/apple/ipad-13/en-US"],
+  "export_count": 10,
+  "formats": ["1320x2868 baseline JPEG", "2064x2752 baseline JPEG"],
+  "locales": ["en-US"],
+  "next": "ASSET-5"
+}

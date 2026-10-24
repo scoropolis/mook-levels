@@ -1,0 +1,14 @@
+{
+  "stage": "ASSET-0",
+  "status": "complete",
+  "release": "Mook Worlds 1.2 (3)",
+  "input_commit": "ac79d30",
+  "checked_at": "2026-10-24",
+  "official_sources": [
+    "https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/",
+    "https://developer.apple.com/help/app-store-connect/reference/app-information/app-preview-specifications/"
+  ],
+  "outputs": ["asset-manifest.yaml"],
+  "scope": ["iPhone 6.9-inch portrait", "iPad 13-inch portrait", "en-US"],
+  "next": "ASSET-1"
+}

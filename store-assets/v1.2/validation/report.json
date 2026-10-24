@@ -1,0 +1,102 @@
+{
+  "valid": true,
+  "errors": [],
+  "exportCount": 10,
+  "exports": [
+    {
+      "file": "exports/apple/iphone-6.9/en-US/apple-iphone-69-en-US-01-climb-seven-worlds-1320x2868.jpg",
+      "width": 1320,
+      "height": 2868,
+      "mode": "RGB",
+      "format": "JPEG",
+      "bytes": 541493,
+      "sha256": "ece701ac1b7253c8a69131ca2f4ea31b3ca7eeba44106e18a90723d4878f9ad6"
+    },
+    {
+      "file": "exports/apple/iphone-6.9/en-US/apple-iphone-69-en-US-02-tap-swipe-hold-break-1320x2868.jpg",
+      "width": 1320,
+      "height": 2868,
+      "mode": "RGB",
+      "format": "JPEG",
+      "bytes": 520540,
+      "sha256": "d97892cbba991eddf05e7bda42512640975339653c0aeec0f7cea06d6e502140"
+    },
+    {
+      "file": "exports/apple/iphone-6.9/en-US/apple-iphone-69-en-US-03-every-world-changes-1320x2868.jpg",
+      "width": 1320,
+      "height": 2868,
+      "mode": "RGB",
+      "format": "JPEG",
+      "bytes": 507919,
+      "sha256": "344461139a4ac17a6a7afb6e9199ec21c28af08d1d97926fe7c2eb4432b0a990"
+    },
+    {
+      "file": "exports/apple/iphone-6.9/en-US/apple-iphone-69-en-US-04-choose-your-advantage-1320x2868.jpg",
+      "width": 1320,
+      "height": 2868,
+      "mode": "RGB",
+      "format": "JPEG",
+      "bytes": 460904,
+      "sha256": "c5fcf399dedc5e4ac5362e660f7ccf9d570c991cc7fab5b15dad15de27f4786a"
+    },
+    {
+      "file": "exports/apple/iphone-6.9/en-US/apple-iphone-69-en-US-05-endless-keeps-escalating-1320x2868.jpg",
+      "width": 1320,
+      "height": 2868,
+      "mode": "RGB",
+      "format": "JPEG",
+      "bytes": 497642,
+      "sha256": "a09fd989389b85db9ed6bc6266b7c8424a73f780006fe051ba3f690f737e4788"
+    },
+    {
+      "file": "exports/apple/ipad-13/en-US/apple-ipad-13-en-US-01-climb-seven-worlds-2064x2752.jpg",
+      "width": 2064,
+      "height": 2752,
+      "mode": "RGB",
+      "format": "JPEG",
+      "bytes": 727942,
+      "sha256": "c6dab63d765bea1baf4e5199f081aed84e0c60b3fb191cee51572f131baf0fac"
+    },
+    {
+      "file": "exports/apple/ipad-13/en-US/apple-ipad-13-en-US-02-tap-swipe-hold-break-2064x2752.jpg",
+      "width": 2064,
+      "height": 2752,
+      "mode": "RGB",
+      "format": "JPEG",
+      "bytes": 696771,
+      "sha256": "dac6877773a38ab6057eb9d67770122984aae340f0e6f316d8a6fcbaac93ccf1"
+    },
+    {
+      "file": "exports/apple/ipad-13/en-US/apple-ipad-13-en-US-03-every-world-changes-2064x2752.jpg",
+      "width": 2064,
+      "height": 2752,
+      "mode": "RGB",
+      "format": "JPEG",
+      "bytes": 693946,
+      "sha256": "25692980564d3c9c3c1c51c9ac790a75ab30840ae89896020394306fef5b588c"
+    },
+    {
+      "file": "exports/apple/ipad-13/en-US/apple-ipad-13-en-US-04-choose-your-advantage-2064x2752.jpg",
+      "width": 2064,
+      "height": 2752,
+      "mode": "RGB",
+      "format": "JPEG",
+      "bytes": 618349,
+      "sha256": "1438dde7fa7e3d915699df75a37cbb2daf87cbcab7a9b4ae5e66ae48c0c0092d"
+    },
+    {
+      "file": "exports/apple/ipad-13/en-US/apple-ipad-13-en-US-05-endless-keeps-escalating-2064x2752.jpg",
+      "width": 2064,
+      "height": 2752,
+      "mode": "RGB",
+      "format": "JPEG",
+      "bytes": 688609,
+      "sha256": "08d8df2bcd9e0abbc6387347024d09ee3125d53b20d9d7afb137991e3199539a"
+    }
+  ],
+  "sourceSha256": "c506d90563f051803d9c60c4431b601da6e4167678ed517927339cbf0da8d19b",
+  "compiledSha256": "c506d90563f051803d9c60c4431b601da6e4167678ed517927339cbf0da8d19b",
+  "compiledMatchesSource": true,
+  "piiAndSecrets": "passed_none_present",
+  "claims": "passed_against_build_3_source"
+}

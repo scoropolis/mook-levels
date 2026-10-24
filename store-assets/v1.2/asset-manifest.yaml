@@ -1,0 +1,59 @@
+version: 1
+release:
+  product: Mook Worlds
+  version: '1.2'
+  build: '3'
+  commit: ac79d30
+  bundle_id: com.skygardenapps.mookworlds
+checked_at: '2026-10-24'
+official_sources:
+  apple_screenshots: https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/
+  apple_previews: https://developer.apple.com/help/app-store-connect/reference/app-information/app-preview-specifications/
+supported_destinations: [apple_app_store_ios]
+locales: [en-US]
+brand:
+  system_path: /Users/pointform/Projects/mook-levels/index.html
+  visual_direction: colorful_tactile_arcade_cinematic
+  built_different_reference_used_for_hierarchy_only: true
+demo_state:
+  seed_version: mook-screenshot-v1.2-1
+  environment: deterministic_local_release_source
+  fictional_pii: none
+  external_side_effects: none
+capture:
+  release_build_verified: true
+  compiled_app_path: /Users/pointform/Projects/mook-levels/build/DerivedData/Build/Products/Release-iphonesimulator/App.app
+  compiled_web_source_sha256: c506d90563f051803d9c60c4431b601da6e4167678ed517927339cbf0da8d19b
+  raw_capture_root: raw-captures/ios
+assets:
+  - display_group: iphone_6_9
+    app_store_connect_display_type: APP_IPHONE_67
+    dimensions: 1320x2868
+    format: baseline_jpeg
+    count: 5
+    path: exports/apple/iphone-6.9/en-US
+  - display_group: ipad_13
+    app_store_connect_display_type: APP_IPAD_PRO_3GEN_129
+    dimensions: 2064x2752
+    format: baseline_jpeg
+    count: 5
+    path: exports/apple/ipad-13/en-US
+validation:
+  dimensions: passed
+  formats: passed_baseline_jpeg
+  alpha: passed_no_alpha_rgb
+  colour_profile: passed_rgb
+  file_sizes: passed
+  pii_and_secrets: passed_none_present
+  claim_accuracy: passed_against_build_3_source
+  manifest_coverage: passed_5_iphone_5_ipad
+approval:
+  contact_sheets:
+    - contact-sheets/mook-worlds-ios-en-US-v1.2-iphone-6.9.jpg
+    - contact-sheets/mook-worlds-ios-en-US-v1.2-ipad-13.jpg
+  revision: R1
+  adam_approved: false
+handoff:
+  mobile_app_publishing_accepted: false
+  uploaded: false
+  console_render_verified: false

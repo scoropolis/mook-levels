@@ -1,0 +1,11 @@
+{
+  "stage": "ASSET-2",
+  "status": "complete",
+  "release": "Mook Worlds 1.2 (3)",
+  "input_commit": "ac79d30",
+  "outputs": ["storyboard-R1.md", "sources/generate-artistic-screenshots.mjs"],
+  "campaign": "Climb into the action",
+  "frames": 5,
+  "creative_standard": "art-directed gameplay-led editorial/cinematic",
+  "next": "ASSET-3-IOS"
+}
