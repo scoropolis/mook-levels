@@ -7,7 +7,7 @@
 - **Bundle ID:** `com.skygardenapps.mookworlds`
 - **Primary category:** Games — Casual
 - **Secondary category:** Games — Action
-- **Version:** 1.1
+- **Version:** 1.2
 - **Copyright:** 2026 Adam Stanger
 
 ## Promotional text
@@ -16,7 +16,7 @@ Master 70 handcrafted levels, build your power-up inventory, and unlock an escal
 
 ## What's New
 
-Build your inventory with earned and optional power-ups, unlock Endless Play at 100 total stars, and climb a clearer world map with clouded progression.
+Purchases now connect correctly to Apple's checkout, and completing levels no longer grants unintended extra power-ups. This update also includes the upward-climbing world map and Endless Play improvements from the latest TestFlight build.
 
 ## Description
 
