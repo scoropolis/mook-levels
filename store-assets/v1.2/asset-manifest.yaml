@@ -52,8 +52,12 @@ approval:
     - contact-sheets/mook-worlds-ios-en-US-v1.2-iphone-6.9.jpg
     - contact-sheets/mook-worlds-ios-en-US-v1.2-ipad-13.jpg
   revision: R1
-  adam_approved: false
+  adam_approved: true
+  approved_at: '2026-10-24'
 handoff:
-  mobile_app_publishing_accepted: false
-  uploaded: false
-  console_render_verified: false
+  mobile_app_publishing_accepted: true
+  uploaded: true
+  console_render_verified: true
+  app_store_version_id: 9742acd8-0fbe-4097-9bea-ce418d43bbd3
+  localization_id: a508085b-71ce-47e5-a15f-f92484b7132f
+  screenshot_counts: 5_iphone_5_ipad_all_complete

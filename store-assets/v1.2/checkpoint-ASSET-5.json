@@ -1,6 +1,6 @@
 {
   "stage": "ASSET-5",
-  "status": "complete_awaiting_user_approval",
+  "status": "approved_and_uploaded",
   "release": "Mook Worlds 1.2 (3)",
   "input_commit": "ac79d30",
   "outputs": ["validation/report.json", "validation/sha256.txt", "contact-sheets/mook-worlds-ios-en-US-v1.2-iphone-6.9.jpg", "contact-sheets/mook-worlds-ios-en-US-v1.2-ipad-13.jpg"],
@@ -12,7 +12,9 @@
     "claims": "passed",
     "pii_and_secrets": "passed"
   },
-  "adam_approved": false,
-  "upload_allowed": false,
-  "next": "Adam visual approval of R1 contact sheets"
+  "adam_approved": true,
+  "approved_at": "2026-10-24",
+  "uploaded": true,
+  "provider_readback": "5 iPhone and 5 iPad screenshots COMPLETE",
+  "next": "App Review"
 }
