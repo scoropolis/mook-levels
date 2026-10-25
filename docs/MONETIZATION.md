@@ -36,7 +36,7 @@ These US prices and equivalent tiers were verified in App Store Connect on Octob
 - Interstitial eligibility is evaluated only from a loss result. Wins never call the ad path.
 - The first eligible presentation requires three losses and at least two session minutes.
 - After an impression, another requires three more losses and at least two minutes.
-- The cap is three interstitials per app session.
+- There is no arbitrary per-session impression ceiling; every later impression still requires three additional losses and at least two minutes since the prior impression.
 - Ads are requested only after the result UI is safely presented, never during gameplay, result animation, purchase, or continue selection.
 - Remove Ads suppresses every interstitial request.
 - No-fill and presentation errors fail closed and gameplay continues.
@@ -54,5 +54,5 @@ These US prices and equivalent tiers were verified in App Store Connect on Octob
 2. Review AdMob account-level GDPR vendor/legal-basis settings, publish the saved European consent message only after the public privacy text is accurate, and decide age/territory treatment.
 3. Resolve AdMob app-ads.txt and account payment-verification gates without changing legal or banking details from this release workflow.
 4. Complete legal review of the privacy policy and App Privacy answers against the final SDK/data behavior.
-5. Prove consent, privacy options, loss-only timing, caps, no-fill, background/foreground, orientation, and Remove Ads suppression on a physical device.
+5. Prove consent, privacy options, loss-only timing and spacing, no-fill, background/foreground, orientation, and Remove Ads suppression on a physical device.
 6. Obtain explicit approval before enabling MookAdsEnabled, upload, submission, distribution, or release.

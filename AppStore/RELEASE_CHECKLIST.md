@@ -29,7 +29,7 @@
 - [ ] Complete the StoreKit sandbox/device matrix, including pending, duplicate, interrupted, restore, reinstall, refund, and offline cases.
 - [x] Configure production AdMob identifiers while retaining official sample identifiers only in Debug code paths.
 - [ ] Approve and device-test UMP consent, age/territory behavior, and final privacy disclosures before enabling MookAdsEnabled.
-- [ ] Prove interstitials occur only after losses, respect two-minute/three-loss/three-per-session caps, and are suppressed by Remove Ads.
+- [ ] Prove interstitials occur only after losses, require three losses and two-minute spacing without an arbitrary session ceiling, and are suppressed by Remove Ads.
 - [ ] Reconcile this checklist with docs/V1_1_RELEASE_CHECKPOINT.md before release-candidate approval.
 
 ## Approval gates

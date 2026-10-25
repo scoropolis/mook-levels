@@ -692,6 +692,12 @@ let browser;
   assert.equal(v11State.adSession.lossesSinceAd, 0);
   assert.equal(v11State.adSession.shown, 1);
 
+  await v11Page.evaluate(() => window.__mookLevels.setAdSessionForTest({startedAt:Date.now()-900000,lossesSinceAd:2,shown:3,lastShownAt:Date.now()-180000}));
+  assert.equal(await v11Page.evaluate(() => window.__mookLevels.maybePresentLossAdForTest()), true, 'there is no arbitrary per-session interstitial ceiling once timing and loss spacing are satisfied');
+  assert.equal(await v11Page.evaluate(() => window.__nativeCalls.ads), 2);
+  v11State = await v11Page.evaluate(() => window.__mookLevels.getState());
+  assert.equal(v11State.adSession.shown, 4);
+
   await v11Page.evaluate(() => window.__mookLevels.returnToMap());
   await v11Page.click('#storeButton');
   assert.equal(await v11Page.locator('.product-button').count(), 6);
@@ -707,7 +713,7 @@ let browser;
   assert.equal(v11State.removeAds, true);
   await v11Page.evaluate(() => window.__mookLevels.setAdSessionForTest({startedAt:Date.now()-300000,lossesSinceAd:3,shown:0,lastShownAt:0}));
   assert.equal(await v11Page.evaluate(() => window.__mookLevels.maybePresentLossAdForTest()), false, 'Remove Ads suppresses all interstitial attempts');
-  assert.equal(await v11Page.evaluate(() => window.__nativeCalls.ads), 1);
+  assert.equal(await v11Page.evaluate(() => window.__nativeCalls.ads), 2);
   await v11Page.close();
 
   console.log(JSON.stringify({ ok: true, levels: configs.length, finalState: state }));
