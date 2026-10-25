@@ -622,10 +622,11 @@ let browser;
     localStorage.setItem('mook-worlds-completed', JSON.stringify(Object.fromEntries(Array.from({length:50},(_,index)=>[String(index+1),1]))));
     localStorage.setItem('mook-worlds-stars', JSON.stringify(Object.fromEntries(Array.from({length:25},(_,index)=>[String(index+1),4]))));
     window.__nativeCalls = { purchases: [], ads: 0, restores: 0, acknowledgements: [] };
+    window.__purchaseError = '';
     window.Capacitor = { Plugins: {
       MookCommerce: {
         getProducts: async ({ids}) => ({ products: ids.map((id,index) => ({id,displayPrice:`$${index+1}.99`})), removeAds: false, pending: [] }),
-        purchase: async ({productId}) => { window.__nativeCalls.purchases.push(productId); return { deliveries: [{productId,transactionId:`tx-${window.__nativeCalls.purchases.length}`}], cancelled: false }; },
+        purchase: async ({productId}) => { if(window.__purchaseError)throw new Error(window.__purchaseError); window.__nativeCalls.purchases.push(productId); return { deliveries: [{productId,transactionId:`tx-${window.__nativeCalls.purchases.length}`}], cancelled: false }; },
         acknowledge: async ({transactionId}) => { window.__nativeCalls.acknowledgements.push(transactionId); return {}; },
         restore: async () => { window.__nativeCalls.restores += 1; return {removeAds:true,pending:[]}; }
       },
@@ -701,6 +702,11 @@ let browser;
   await v11Page.evaluate(() => window.__mookLevels.returnToMap());
   await v11Page.click('#storeButton');
   assert.equal(await v11Page.locator('.product-button').count(), 6);
+  await v11Page.evaluate(() => { window.__purchaseError='StoreKit presentation unavailable'; });
+  await v11Page.click('.product-button[data-product="com.skygardenapps.mookworlds.power.time.5"]');
+  assert.match(await v11Page.locator('#storeStatus').textContent(), /StoreKit presentation unavailable/, 'checkout failures must remain visible instead of being overwritten by the generic ready status');
+  assert.equal(await v11Page.locator('.product-button[data-product="com.skygardenapps.mookworlds.power.time.5"]').isEnabled(), true);
+  await v11Page.evaluate(() => { window.__purchaseError=''; });
   await v11Page.evaluate(async () => {
     await window.__mookLevels.applyPurchaseDeliveryForTest({productId:'com.skygardenapps.mookworlds.power.sky.5',transactionId:'duplicate-proof'});
     await window.__mookLevels.applyPurchaseDeliveryForTest({productId:'com.skygardenapps.mookworlds.power.sky.5',transactionId:'duplicate-proof'});

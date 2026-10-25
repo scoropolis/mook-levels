@@ -28,6 +28,8 @@ assert.match(commerce, /VerificationResult/);
 assert.match(commerce, /Transaction\.unfinished/);
 assert.match(commerce, /await transaction\.finish\(\)/);
 assert.match(commerce, /AppStore\.sync\(\)/);
+assert.match(commerce, /bridge\?\.viewController/, 'StoreKit purchase presentation needs Capacitor’s active view controller');
+assert.match(commerce, /purchase\(confirmIn:\s*viewController/, 'modern iOS purchases must receive an explicit confirmation view controller');
 assert.match(ads, /ca-app-pub-3940256099942544\/4411468910/);
 assert.match(ads, /#if DEBUG/);
 assert.match(ads, /MookAdsEnabled/);

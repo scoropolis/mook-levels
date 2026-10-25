@@ -578,8 +578,9 @@
   }
   async function purchaseProduct(productId){
     const plugin=commercePlugin();if(!plugin)return;const product=STORE_PRODUCTS.find(item=>item.id===productId);const lockedPower=lockedProductPower(product);if(lockedPower){const unlock=POWER_UNLOCKS[lockedPower];storeStatus.textContent=`Unlock ${unlock.worldName} before buying this pack.`;return;}storeStatus.textContent='Waiting for Apple…';productList.querySelectorAll('button').forEach(button=>button.disabled=true);
-    try{const result=await plugin.purchase({productId});await reconcilePurchases(result?.deliveries||[]);if(result?.cancelled)storeStatus.textContent='Purchase cancelled.';else storeStatus.textContent=productId.endsWith('removeads')?'Ads removed. Thank you!':'Power-ups added to your inventory.';}
-    catch(_){storeStatus.textContent='Purchase was not completed. Nothing was charged or consumed.';}finally{renderStore();}
+    let outcome='';
+    try{const result=await plugin.purchase({productId});await reconcilePurchases(result?.deliveries||[]);if(result?.cancelled)outcome='Purchase cancelled.';else if(result?.pending)outcome='Purchase pending Apple approval.';else outcome=productId.endsWith('removeads')?'Ads removed. Thank you!':'Power-ups added to your inventory.';}
+    catch(error){const reason=String(error?.message||error||'Unknown App Store error');outcome=`Apple checkout could not open: ${reason}`;}finally{renderStore();if(outcome)storeStatus.textContent=outcome;}
   }
   async function restoreStorePurchases(){
     const plugin=commercePlugin();if(!plugin)return;storeStatus.textContent='Checking purchases…';

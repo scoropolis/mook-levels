@@ -43,13 +43,23 @@ public final class MookCommercePlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("Unknown product identifier")
             return
         }
-        Task {
+        Task { @MainActor in
             do {
                 guard let product = try await Product.products(for: [productID]).first else {
                     call.reject("Product is not configured in the current StoreKit environment")
                     return
                 }
-                switch try await product.purchase() {
+                let result: Product.PurchaseResult
+                if #available(iOS 18.2, *) {
+                    guard let viewController = bridge?.viewController else {
+                        call.reject("Apple checkout could not find the active app screen")
+                        return
+                    }
+                    result = try await product.purchase(confirmIn: viewController)
+                } else {
+                    result = try await product.purchase()
+                }
+                switch result {
                 case .success(let verification):
                     let transaction = try verified(verification)
                     call.resolve(["cancelled": false, "deliveries": [delivery(for: transaction)]])
@@ -61,7 +71,7 @@ public final class MookCommercePlugin: CAPPlugin, CAPBridgedPlugin {
                     call.reject("Unsupported StoreKit purchase result")
                 }
             } catch {
-                call.reject("Purchase failed", nil, error)
+                call.reject("Purchase failed: \(error.localizedDescription)", nil, error)
             }
         }
     }
