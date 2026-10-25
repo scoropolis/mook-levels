@@ -18,6 +18,14 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
     private var presentationCall: CAPPluginCall?
     private var isEnabled = false
 
+    private func isTestMode() -> Bool {
+        #if DEBUG
+        return true
+        #else
+        return Bundle.main.object(forInfoDictionaryKey: "MookAdsTestMode") as? Bool ?? false
+        #endif
+    }
+
     @objc public func configure(_ call: CAPPluginCall) {
         #if DEBUG
         isEnabled = true
@@ -60,6 +68,7 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
                     self?.loadInterstitial()
                     call.resolve([
                         "configured": true,
+                        "testMode": self?.isTestMode() ?? false,
                         "privacyOptionsRequired": self?.privacyOptionsRequired() ?? false
                     ])
                 }
@@ -90,10 +99,11 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
     }
 
     private func adUnitID() -> String {
-        #if DEBUG
-        return testInterstitialID
-        #else
+        if isTestMode() { return testInterstitialID }
+        #if !DEBUG
         return Bundle.main.object(forInfoDictionaryKey: "MookAdMobInterstitialID") as? String ?? ""
+        #else
+        return testInterstitialID
         #endif
     }
 

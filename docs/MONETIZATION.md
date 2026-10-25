@@ -1,6 +1,6 @@
 # Monetization v1.1
 
-Status: **App Store Connect products and AdMob records configured; serving, consent/privacy approval, and device proof remain gated**
+Status: **AdMob account and privacy prerequisites verified; internal build 6 uses official Google test demand pending physical-device proof**
 
 The six StoreKit product records and one loss-only interstitial unit are configured externally. No privacy answers, uploads, submissions, or releases were changed.
 
@@ -41,7 +41,7 @@ These US prices and equivalent tiers were verified in App Store Connect on Octob
 - Remove Ads suppresses every interstitial request.
 - No-fill and presentation errors fail closed and gameplay continues.
 - Debug builds use Google's official iOS sample app ID and interstitial test unit.
-- Production AdMob identifiers are installed in the Release configuration, but Release builds remain disabled while MookAdsEnabled is false.
+- Production AdMob identifiers are installed. Internal build 6 enables the release ad path but forces Google's official test interstitial ID; production demand remains off until physical-device acceptance and an explicitly approved production build.
 - UMP refreshes consent information before Google Mobile Ads starts, presents a required consent form, and blocks ad requests unless the SDK reports that ads may be requested.
 - Mook Worlds is classified as general audience, so every UMP consent-information request explicitly sends the under-age-of-consent tag as false (`isTaggedForUnderAgeOfConsent = false` in Swift).
 - A Privacy choices control appears when UMP reports that privacy options are required.
@@ -51,8 +51,8 @@ These US prices and equivalent tiers were verified in App Store Connect on Octob
 ## External release gates
 
 1. Run StoreKit sandbox/device tests for success, cancellation, pending/Ask to Buy, duplicate callback, interrupted delivery, unfinished reconciliation, restore, reinstall, offline launch, and revoked/refunded Remove Ads.
-2. Review AdMob account-level GDPR vendor/legal-basis settings, publish the saved European consent message only after the public privacy text is accurate, and decide age/territory treatment.
-3. Resolve AdMob app-ads.txt and account payment-verification gates without changing legal or banking details from this release workflow.
+2. Publish the advertising-aware privacy policy before the test build; the European consent message is already published and applies to Mook Worlds.
+3. Keep the verified root `app-ads.txt` record live. AdMob identity, address PIN and bank details unlock only after Google's earnings thresholds and do not block initial serving.
 4. Complete legal review of the privacy policy and App Privacy answers against the final SDK/data behavior.
 5. Prove consent, privacy options, loss-only timing and spacing, no-fill, background/foreground, orientation, and Remove Ads suppression on a physical device.
-6. Obtain explicit approval before enabling MookAdsEnabled, upload, submission, distribution, or release.
+6. Obtain explicit approval before uploading the internal test build, switching `MookAdsTestMode` off, submission, distribution, or public release.

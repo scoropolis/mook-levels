@@ -33,6 +33,7 @@ assert.match(commerce, /purchase\(confirmIn:\s*viewController/, 'modern iOS purc
 assert.match(ads, /ca-app-pub-3940256099942544\/4411468910/);
 assert.match(ads, /#if DEBUG/);
 assert.match(ads, /MookAdsEnabled/);
+assert.match(ads, /MookAdsTestMode/);
 assert.match(ads, /requestConsentInfoUpdate/);
 assert.match(ads, /loadAndPresentIfRequired/);
 assert.match(ads, /isTaggedForUnderAgeOfConsent\s*=\s*false/);
@@ -43,7 +44,9 @@ const interstitialID = plist.match(/<key>MookAdMobInterstitialID<\/key>\s*<strin
 assert.match(appID || '', /^ca-app-pub-\d+~\d+$/);
 assert.match(interstitialID || '', /^ca-app-pub-\d+\/\d+$/);
 assert.notEqual(appID, 'ca-app-pub-3940256099942544~1458002511');
-assert.match(plist, /<key>MookAdsEnabled<\/key>\s*<false\/>/);
+assert.match(plist, /<key>MookAdsEnabled<\/key>\s*<true\/>/);
+assert.match(plist, /<key>MookAdsTestMode<\/key>\s*<true\/>/);
+assert.equal((plist.match(/<key>SKAdNetworkIdentifier<\/key>/g) || []).length, 50);
 assert.match(podfile, /Google-Mobile-Ads-SDK/);
 assert.match(podlock, /Google-Mobile-Ads-SDK \(12\.14\.0\)/);
 assert.match(bridge, /registerPluginInstance\(MookCommercePlugin\(\)\)/, 'Capacitor local plugins must be registered as instances at runtime');
