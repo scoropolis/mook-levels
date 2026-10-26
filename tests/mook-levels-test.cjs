@@ -18,6 +18,13 @@ let browser;
   await page.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
 
   assert.equal(await page.locator('#titleScreen').getAttribute('class'), 'screen title-screen active');
+  for (const legalPage of ['support.html','privacy.html']) {
+    const legal = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    await legal.goto(`http://127.0.0.1:8891/${legalPage}`, { waitUntil: 'networkidle' });
+    assert.equal(await legal.locator('.back').textContent(), '‹ Back to Mook Worlds');
+    assert.equal(await legal.locator('.back').getAttribute('href'), 'index.html');
+    await legal.close();
+  }
   assert.deepEqual(await page.locator('.title-option').allTextContents(), ['Mook WorldsContinue the world journey','Endless Play100 ★ to unlock'], 'the title screen has exactly two primary options');
   assert.equal(await page.locator('#endlessButton').isDisabled(), true);
   assert.match(await page.locator('#endlessButton').getAttribute('aria-label'), /locked.*100 stars/);
@@ -686,15 +693,15 @@ let browser;
   assert.equal(await v11Page.locator('#resultPrimary').textContent(), 'Try again', 'a second continue is never offered');
   assert.equal(await v11Page.evaluate(() => localStorage.getItem('mook-worlds-endless-high-score')), '1');
 
-  await v11Page.evaluate(() => window.__mookLevels.setAdSessionForTest({startedAt:Date.now()-180000,lossesSinceAd:2,shown:0,lastShownAt:0}));
+  await v11Page.evaluate(() => window.__mookLevels.setAdSessionForTest({startedAt:Date.now(),lossesSinceAd:2,shown:0,lastShownAt:0}));
   assert.equal(await v11Page.evaluate(() => window.__mookLevels.maybePresentLossAdForTest()), true);
   assert.equal(await v11Page.evaluate(() => window.__nativeCalls.ads), 1);
   v11State = await v11Page.evaluate(() => window.__mookLevels.getState());
   assert.equal(v11State.adSession.lossesSinceAd, 0);
   assert.equal(v11State.adSession.shown, 1);
 
-  await v11Page.evaluate(() => window.__mookLevels.setAdSessionForTest({startedAt:Date.now()-900000,lossesSinceAd:2,shown:3,lastShownAt:Date.now()-180000}));
-  assert.equal(await v11Page.evaluate(() => window.__mookLevels.maybePresentLossAdForTest()), true, 'there is no arbitrary per-session interstitial ceiling once timing and loss spacing are satisfied');
+  await v11Page.evaluate(() => window.__mookLevels.setAdSessionForTest({startedAt:Date.now(),lossesSinceAd:2,shown:3,lastShownAt:Date.now()}));
+  assert.equal(await v11Page.evaluate(() => window.__mookLevels.maybePresentLossAdForTest()), true, 'there is no arbitrary per-session interstitial ceiling or time delay after three additional losses');
   assert.equal(await v11Page.evaluate(() => window.__nativeCalls.ads), 2);
   v11State = await v11Page.evaluate(() => window.__mookLevels.getState());
   assert.equal(v11State.adSession.shown, 4);

@@ -588,10 +588,10 @@
   }
   function openStore(){renderStore();storeOverlay.classList.remove('hidden');storeClose.focus();}
   function closeStore(){storeOverlay.classList.add('hidden');storeButton.focus();}
-  function adEligible(now=Date.now()){return !removeAds&&adSession.lossesSinceAd>=3&&now-adSession.startedAt>=120000&&(!adSession.lastShownAt||now-adSession.lastShownAt>=120000);}
+  function adEligible(){return !removeAds&&adSession.lossesSinceAd>=3;}
   async function maybePresentLossAd(){
     adSession.lossesSinceAd+=1;const now=Date.now();if(!adEligible(now))return false;const plugin=adsPlugin();if(!plugin)return false;
-    try{const result=await plugin.showInterstitial();if(result?.shown){adSession.lossesSinceAd=0;adSession.shown+=1;adSession.lastShownAt=now;return true;}}catch(_){}return false;
+    try{const result=await plugin.showInterstitial();if(result?.shown){adSession.lossesSinceAd=0;adSession.shown+=1;adSession.lastShownAt=now;return true;}if(result?.detail)showToast(`Ad unavailable: ${result.detail}`);}catch(error){showToast(`Ad unavailable: ${String(error?.message||error)}`);}return false;
   }
 
   const cells = Array.from({length:8},(_,index) => {

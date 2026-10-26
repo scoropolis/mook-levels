@@ -34,9 +34,9 @@ These US prices and equivalent tiers were verified in App Store Connect on Octob
 ## AdMob policy and implementation
 
 - Interstitial eligibility is evaluated only from a loss result. Wins never call the ad path.
-- The first eligible presentation requires three losses and at least two session minutes.
-- After an impression, another requires three more losses and at least two minutes.
-- There is no arbitrary per-session impression ceiling; every later impression still requires three additional losses and at least two minutes since the prior impression.
+- The first eligible presentation occurs immediately after the third loss.
+- After an impression, another requires three more losses; there is no time delay.
+- There is no arbitrary per-session impression ceiling; every later impression still requires three additional losses.
 - Ads are requested only after the result UI is safely presented, never during gameplay, result animation, purchase, or continue selection.
 - Remove Ads suppresses every interstitial request.
 - No-fill and presentation errors fail closed and gameplay continues.

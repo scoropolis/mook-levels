@@ -62,4 +62,4 @@ Mook Worlds is a portrait arcade game with no account requirement. From the open
 
 Tap **Store** on the world map to view the six in-app purchases. The four five-packs add five units of the named power-up. The variety pack adds three of each power-up (12 total). These consumables are stored locally and are not restorable. Remove Ads is a non-consumable entitlement and can be restored with **Restore Remove Ads**.
 
-Interstitial ads are designed to appear only after losses and require three additional losses plus two-minute spacing. Production ad serving remains disabled until the signed release candidate passes consent, no-fill, frequency-spacing, and Remove Ads suppression testing; the final review notes must be reconciled with the uploaded build before submission.
+Interstitial ads are designed to appear only after every third loss, with no time delay. Production ad serving remains disabled until the signed release candidate passes consent, no-fill, loss-spacing, and Remove Ads suppression testing; the final review notes must be reconciled with the uploaded build before submission.

@@ -17,6 +17,7 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
     private var interstitial: InterstitialAd?
     private var presentationCall: CAPPluginCall?
     private var isEnabled = false
+    private var loadError: String?
 
     private func isTestMode() -> Bool {
         #if DEBUG
@@ -89,7 +90,11 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
     @objc public func showInterstitial(_ call: CAPPluginCall) {
         guard isEnabled, let ad = interstitial, let controller = bridge?.viewController else {
             loadInterstitial()
-            call.resolve(["shown": false])
+            call.resolve([
+                "shown": false,
+                "reason": interstitial == nil ? "ad-not-ready" : "presentation-unavailable",
+                "detail": loadError ?? "The interstitial is still loading. Try again after the next loss."
+            ])
             return
         }
         presentationCall = call
@@ -110,9 +115,11 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
     private func loadInterstitial() {
         let id = adUnitID()
         guard isEnabled, !id.isEmpty else { return }
-        InterstitialAd.load(with: id, request: Request()) { [weak self] ad, _ in
-            self?.interstitial = ad
-            self?.interstitial?.fullScreenContentDelegate = self
+        InterstitialAd.load(with: id, request: Request()) { [weak self] ad, error in
+            guard let self else { return }
+            self.interstitial = ad
+            self.loadError = error?.localizedDescription
+            self.interstitial?.fullScreenContentDelegate = self
         }
     }
 
@@ -127,7 +134,7 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
     }
 
     public func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
-        presentationCall?.resolve(["shown": false])
+        presentationCall?.resolve(["shown": false, "reason": "presentation-failed", "detail": error.localizedDescription])
         presentationCall = nil
         loadInterstitial()
     }
