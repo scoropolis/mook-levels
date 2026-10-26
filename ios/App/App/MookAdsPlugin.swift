@@ -17,6 +17,7 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
     private let testInterstitialID = "ca-app-pub-3940256099942544/4411468910"
     private var interstitial: InterstitialAd?
     private var presentationCall: CAPPluginCall?
+    private var isPresenting = false
     private var isEnabled = false
     private var loadError: String?
 
@@ -111,9 +112,23 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
             return
         }
         presentationCall = call
+        isPresenting = false
         interstitial = nil
         ad.fullScreenContentDelegate = self
-        ad.present(from: controller)
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            ad.present(from: controller)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+                guard let self, !self.isPresenting, self.presentationCall?.callbackId == call.callbackId else { return }
+                self.presentationCall?.resolve([
+                    "shown": false,
+                    "reason": "presentation-timeout",
+                    "detail": "Google did not open the interstitial within three seconds."
+                ])
+                self.presentationCall = nil
+                self.loadInterstitial()
+            }
+        }
     }
 
     private func adUnitID() -> String {
@@ -156,6 +171,7 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
 
     public func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
         NSLog("[MookAds] interstitial dismissed")
+        isPresenting = false
         presentationCall?.resolve(["shown": true])
         presentationCall = nil
         loadInterstitial()
@@ -163,6 +179,7 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
 
     public func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
         NSLog("[MookAds] interstitial presentation failed: %@", error.localizedDescription)
+        isPresenting = false
         presentationCall?.resolve(["shown": false, "reason": "presentation-failed", "detail": error.localizedDescription])
         presentationCall = nil
         loadInterstitial()
@@ -170,6 +187,7 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
 
     public func adWillPresentFullScreenContent(_ ad: FullScreenPresentingAd) {
         NSLog("[MookAds] interstitial will present")
+        isPresenting = true
     }
 
     public func adDidRecordImpression(_ ad: FullScreenPresentingAd) {

@@ -35,6 +35,8 @@ assert.match(ads, /#if DEBUG/);
 assert.match(ads, /MookAdsEnabled/);
 assert.match(ads, /MookAdsTestMode/);
 assert.match(ads, /CAPPluginMethod\(name: "getStatus"/);
+assert.match(ads, /DispatchQueue\.main\.async/);
+assert.match(ads, /presentation-timeout/);
 assert.match(ads, /requestConsentInfoUpdate/);
 assert.match(ads, /loadAndPresentIfRequired/);
 assert.match(ads, /isTaggedForUnderAgeOfConsent\s*=\s*false/);
