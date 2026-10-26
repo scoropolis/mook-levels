@@ -22,13 +22,13 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<!-- Internal build 6 enables the ad path with Google's official test interstitial; production demand remains off. -->
+	<!-- Production AdMob configuration. Development and simulator paths remain test-only in code. -->
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-7880322362965888~7439394865</string>
 	<key>MookAdsEnabled</key>
 	<true/>
 	<key>MookAdsTestMode</key>
-	<true/>
+	<false/>
 	<key>MookAdMobInterstitialID</key>
 	<string>ca-app-pub-7880322362965888/5491143513</string>
 	<key>SKAdNetworkItems</key>

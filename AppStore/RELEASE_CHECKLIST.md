@@ -24,12 +24,11 @@
 
 ## v1.1 commerce and ads gates
 
-- [x] Create the six StoreKit products listed in docs/MONETIZATION.md and confirm final tiers and territories.
-- [ ] Add StoreKit review screenshots before submission.
-- [ ] Complete the StoreKit sandbox/device matrix, including pending, duplicate, interrupted, restore, reinstall, refund, and offline cases.
+- [x] Defer all six StoreKit products from this release; Store and purchase UI are unreachable and metadata makes no IAP claim.
+- [x] Replace purchase replenishment with one idempotent power-up reward on the first flawless four-star clear of each level.
 - [x] Configure production AdMob identifiers while retaining official sample identifiers only in Debug code paths.
 - [ ] Approve and device-test UMP consent, age/territory behavior, and final privacy disclosures before enabling MookAdsEnabled.
-- [ ] Prove interstitials occur only after every third loss without an arbitrary session ceiling, and are suppressed by Remove Ads.
+- [x] Prove interstitials occur only after every third loss without an arbitrary session ceiling; no Remove Ads product ships in this release.
 - [ ] Reconcile this checklist with docs/V1_1_RELEASE_CHECKPOINT.md before release-candidate approval.
 
 ## Approval gates

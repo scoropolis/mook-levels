@@ -110,11 +110,7 @@ let browser;
   await gatingPage.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
   await gatingPage.click('#worldsButton');
   assert.deepEqual((await gatingPage.evaluate(() => window.__mookLevels.getState())).economy.balances, {sky:1,sun:1,rock:1,time:1}, 'new players start with exactly one of every power');
-  await gatingPage.click('#storeButton');
-  await gatingPage.evaluate(() => document.querySelector('.product-button[data-product="com.skygardenapps.mookworlds.power.sky.5"]').dispatchEvent(new MouseEvent('click',{bubbles:true})));
-  assert.deepEqual(await gatingPage.evaluate(() => window.__gatePurchases), [], 'a locked pack cannot reach the StoreKit purchase bridge');
-  assert.match(await gatingPage.locator('#storeStatus').textContent(), /Unlock Sky Current/);
-  await gatingPage.click('#storeClose');
+  assert.equal(await gatingPage.locator('#storeButton').isHidden(), true, 'the ads-only release must not expose an unavailable Store');
   const gateCases = [
     {through:1,level:1,enabled:['time']},
     {through:11,level:11,enabled:['time','sky']},
@@ -133,14 +129,6 @@ let browser;
     await gatingPage.evaluate(() => document.querySelector('.power-card[data-power="rock"]').dispatchEvent(new MouseEvent('click',{bubbles:true})));
     if (!gate.enabled.includes('rock')) assert.equal((await gatingPage.evaluate(() => window.__mookLevels.getState())).equippedPowers.includes('rock'), false, 'a locked power cannot be equipped even by a synthetic click');
     await gatingPage.evaluate(() => window.__mookLevels.returnToMap());
-    await gatingPage.click('#storeButton');
-    const expectedPurchasable = new Set(gate.enabled.map(power => `com.skygardenapps.mookworlds.power.${power}.5`));
-    expectedPurchasable.add('com.skygardenapps.mookworlds.removeads');
-    if (gate.enabled.length === 4) expectedPurchasable.add('com.skygardenapps.mookworlds.power.bundle.12');
-    for (const id of ['com.skygardenapps.mookworlds.power.sky.5','com.skygardenapps.mookworlds.power.sun.5','com.skygardenapps.mookworlds.power.rock.5','com.skygardenapps.mookworlds.power.time.5','com.skygardenapps.mookworlds.power.bundle.12','com.skygardenapps.mookworlds.removeads']) {
-      assert.equal(await gatingPage.locator(`.product-button[data-product="${id}"]`).isEnabled(), expectedPurchasable.has(id), `store gating should match unlocked worlds for ${id}`);
-    }
-    await gatingPage.click('#storeClose');
   }
   await gatingPage.close();
 
@@ -271,12 +259,19 @@ let browser;
   await page.evaluate(() => window.__mookLevels.finishLevelForTest(true));
   const firstClearState = await page.evaluate(() => window.__mookLevels.getState());
   assert.equal(firstClearState.music.running, false, 'soundtrack should stop outside gameplay');
-  assert.equal(firstClearState.economy.balances.time, 0, 'completing a level must not silently grant another Time Slow');
-  assert.deepEqual(firstClearState.economy.awardedLevels, {}, 'level completion must not create hidden power-up awards');
+  assert.equal(firstClearState.economy.balances.time, 1, 'the first four-star clear in World 1 awards one Time Slow');
+  assert.deepEqual(firstClearState.economy.awardedLevels, {'1':'time'}, 'perfect-clear rewards are explicit and level-idempotent');
+  assert.equal(await page.locator('#resultRewardName').textContent(), 'Time Slow ×1 · Now 1 owned');
   assert.equal(await page.locator('#mapScreen').getAttribute('class'), 'screen map-screen active');
   assert.equal(await page.locator('.level-node[data-level="2"]').getAttribute('class'), 'level-node unlocked current');
   assert.equal(await page.locator('.level-node[data-level="1"] .level-stars').textContent(), '★★★★');
   assert.equal((await page.evaluate(() => window.__mookLevels.getState())).starScores['1'], 4);
+  await page.evaluate(() => window.__mookLevels.selectLevel(1));
+  await page.click('#introStart');
+  await page.evaluate(() => window.__mookLevels.finishLevelForTest(true));
+  const replayClearState = await page.evaluate(() => window.__mookLevels.getState());
+  assert.equal(replayClearState.economy.balances.time, 1, 'replaying a flawless level cannot farm its reward');
+  assert.equal(await page.locator('#resultReward').isHidden(), true, 'a replay without a new reward does not show a false reward reveal');
 
   // A weaker replay shows its own award but never lowers the stored best stars.
   await page.evaluate(() => window.__mookLevels.selectLevel(1));
@@ -646,12 +641,7 @@ let browser;
   });
   await v11Page.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
   await v11Page.click('#worldsButton');
-  await wait(1300);
-  assert.equal(await v11Page.locator('#adTestButton').isVisible(),true,'internal test builds expose a direct ad diagnostic control');
-  assert.equal(await v11Page.locator('#adStatus').textContent(),'Test ad ready');
-  await v11Page.click('#adTestButton');
-  assert.equal(await v11Page.locator('#adStatus').textContent(),'Test ad presented and closed');
-  await v11Page.evaluate(()=>{window.__nativeCalls.ads=0;});
+
   const endlessConfigs = await v11Page.evaluate(() => [0,30000,60000,90000,120000,240000].map(window.__mookLevels.getEndlessConfig));
   assert.deepEqual(endlessConfigs.map(item => item.mechanics), [
     ['green','red'],['green','red','blue'],['green','red','blue','yellow'],
@@ -672,13 +662,11 @@ let browser;
   await v11Page.evaluate(() => window.__mookLevels.returnToMap());
   await v11Page.evaluate(() => window.__mookLevels.selectLevel(11));
   const emptySky = v11Page.locator('.power-card[data-power="sky"]');
-  assert.equal(await emptySky.isEnabled(), true, 'an unlocked empty power remains an intentional store route');
-  assert.equal(await emptySky.locator('.inventory-count').textContent(), '＋ Get more');
-  assert.match(await emptySky.getAttribute('aria-label'), /empty, open the store/);
+  assert.equal(await emptySky.isEnabled(), true, 'an unlocked empty power remains visible without commerce messaging');
+  assert.equal(await emptySky.locator('.inventory-count').textContent(), '×0');
+  assert.match(await emptySky.getAttribute('aria-label'), /0 available/);
   await emptySky.click();
-  assert.equal(await v11Page.locator('#storeOverlay').getAttribute('class'), 'store-overlay', 'tapping an empty power opens the store');
-  assert.equal(await v11Page.locator('.inventory-chip').filter({hasText:'Sky'}).locator('small').textContent(), 'Empty');
-  await v11Page.click('#storeClose');
+  assert.equal(await v11Page.locator('#storeOverlay').getAttribute('class'), 'store-overlay hidden', 'tapping an empty power must not expose unavailable commerce');
   await v11Page.evaluate(() => window.__mookLevels.returnToMap());
 
   await v11Page.click('#titleBack');
@@ -714,26 +702,7 @@ let browser;
   assert.equal(v11State.adSession.shown, 4);
 
   await v11Page.evaluate(() => window.__mookLevels.returnToMap());
-  await v11Page.click('#storeButton');
-  assert.equal(await v11Page.locator('.product-button').count(), 6);
-  await v11Page.evaluate(() => { window.__purchaseError='StoreKit presentation unavailable'; });
-  await v11Page.click('.product-button[data-product="com.skygardenapps.mookworlds.power.time.5"]');
-  assert.match(await v11Page.locator('#storeStatus').textContent(), /StoreKit presentation unavailable/, 'checkout failures must remain visible instead of being overwritten by the generic ready status');
-  assert.equal(await v11Page.locator('.product-button[data-product="com.skygardenapps.mookworlds.power.time.5"]').isEnabled(), true);
-  await v11Page.evaluate(() => { window.__purchaseError=''; });
-  await v11Page.evaluate(async () => {
-    await window.__mookLevels.applyPurchaseDeliveryForTest({productId:'com.skygardenapps.mookworlds.power.sky.5',transactionId:'duplicate-proof'});
-    await window.__mookLevels.applyPurchaseDeliveryForTest({productId:'com.skygardenapps.mookworlds.power.sky.5',transactionId:'duplicate-proof'});
-  });
-  v11State = await v11Page.evaluate(() => window.__mookLevels.getState());
-  assert.equal(v11State.economy.balances.sky, 5, 'a StoreKit transaction is fulfilled only once');
-  await v11Page.click('#restorePurchases');
-  await wait(50);
-  v11State = await v11Page.evaluate(() => window.__mookLevels.getState());
-  assert.equal(v11State.removeAds, true);
-  await v11Page.evaluate(() => window.__mookLevels.setAdSessionForTest({startedAt:Date.now()-300000,lossesSinceAd:3,shown:0,lastShownAt:0}));
-  assert.equal(await v11Page.evaluate(() => window.__mookLevels.maybePresentLossAdForTest()), false, 'Remove Ads suppresses all interstitial attempts');
-  assert.equal(await v11Page.evaluate(() => window.__nativeCalls.ads), 2);
+  assert.equal(await v11Page.locator('#storeButton').isHidden(), true, 'commerce remains unreachable throughout the ads-only release');
   await v11Page.close();
 
   console.log(JSON.stringify({ ok: true, levels: configs.length, finalState: state }));

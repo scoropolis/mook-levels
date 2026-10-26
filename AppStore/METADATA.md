@@ -44,7 +44,7 @@ Earn 100 total best-score stars to unlock an escalating run with new mechanics, 
 
 Finish with lives remaining to earn up to four stars. Your best results, unlocked path, and inventory stay saved on your device.
 
-Optional in-app purchases include consumable power-up packs and a restorable one-time Remove Ads purchase. Consumable power-ups are not restorable. Purchases are not required to complete the game. No account is required.
+Power-ups are earned through flawless four-star victories. No account or in-app purchase is required.
 
 ## Keywords
 
@@ -60,6 +60,6 @@ reaction,reflex,arcade,puzzle,tap,swipe,levels,casual,offline,challenge
 
 Mook Worlds is a portrait arcade game with no account requirement. From the opening screen, choose **Mook Worlds** to enter the ascending world map or unlock **Endless Play** by earning 100 total best-score stars. Select an available level, optionally equip saved power-ups, and press **Start level**.
 
-Tap **Store** on the world map to view the six in-app purchases. The four five-packs add five units of the named power-up. The variety pack adds three of each power-up (12 total). These consumables are stored locally and are not restorable. Remove Ads is a non-consumable entitlement and can be restored with **Restore Remove Ads**.
+The first flawless four-star victory on a level awards one power-up and reveals it on the result screen. The Store and all in-app purchases are intentionally absent from this release.
 
-Interstitial ads are designed to appear only after every third loss, with no time delay. Production ad serving remains disabled until the signed release candidate passes consent, no-fill, loss-spacing, and Remove Ads suppression testing; the final review notes must be reconciled with the uploaded build before submission.
+Interstitial ads use Google Mobile Ads and appear only after every third loss, with no time delay. Wins never trigger ads. Google UMP handles consent where required, and Privacy Choices appears when applicable.

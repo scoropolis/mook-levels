@@ -1,35 +1,34 @@
-# Monetization v1.1
+# Monetization v1.3
 
-Status: **AdMob account and privacy prerequisites verified; internal build 6 uses official Google test demand pending physical-device proof**
+Status: **Ads-only production candidate in preparation; StoreKit products deferred**
 
-The six StoreKit product records and one loss-only interstitial unit are configured externally. No privacy answers, uploads, submissions, or releases were changed.
+Mook Worlds 1.3 monetizes through AdMob interstitials only. The Store, product cards, prices, purchase actions, and Remove Ads claim are unreachable and absent from the release UI. The dormant StoreKit bridge and externally configured product records are reserved for a later release after Apple commerce agreements and testing are complete.
 
 ## Power-up economy
 
 - Power-ups are typed consumable balances: sky, sun, rock, and time.
-- New and pre-economy installs receive a one-time starter migration of one unit of each type. Existing version-1 economy records retain their exact saved balances and ledger, including any power-ups granted by older builds.
+- New and pre-economy installs receive a one-time starter migration of one unit of each type. Existing version-1 economy records retain their saved balances and ledger.
 - Each power becomes available with its matching world: Time Slow in Green Valley (World 1), Sky God in Sky Current (World 2), Sun God in Sunhold Sands (World 3), and Rock God in Rock Summit (World 4).
-- A locked power cannot be equipped or purchased. The mixed 12-item pack becomes purchasable when all four powers are unlocked in World 4. Inventory already granted by a verified transaction remains saved even while a contained power is locked.
 - Selecting a power does not consume it. All selected powers are consumed atomically when play begins.
-- Balances may stockpile without an app-imposed cap in v1.1.
-- Level completion and four-star scores do not grant power-ups. Stars control progression and Endless access; inventory changes only through the starter migration, consumption, or a verified StoreKit delivery.
-- Storage is versioned and contains typed balances plus a bounded transaction/reward ledger. A future token wallet can be added as another typed account without redefining existing balances.
-- Inventory is device-local. Consumables are not represented as restorable purchases and no cross-device inventory claim is made.
+- The first flawless four-star clear of each level grants exactly one deterministic power-up. The level ID is recorded before delivery so replaying a flawless level cannot farm duplicate rewards.
+- World 1 rewards Time Slow, World 2 rewards Sky God, World 3 rewards Sun God, and World 4 rewards Rock God. Later worlds rotate through the four types.
+- A new reward is explicitly revealed on the victory card with its type and resulting owned count.
+- Empty inventory displays only its count. The app does not explain, advertise, or tease a future Store.
+- Balances may stockpile without an app-imposed cap.
+- Inventory is device-local; no cross-device inventory claim is made.
 
-## StoreKit 2
+## Deferred StoreKit scope
 
-The iOS app includes a local MookCommerce Capacitor bridge. It loads products, verifies StoreKit transactions, exposes unfinished verified transactions for reconciliation, and finishes each transaction only after the web economy acknowledges idempotent delivery. AppStore.sync() restores the Remove Ads entitlement.
+The repository retains a local MookCommerce Capacitor bridge and six configured product identifiers for a possible future commerce release. They are not part of Mook Worlds 1.3:
 
-| Product ID | Type | App-side delivery | Provisional display intent |
-| --- | --- | --- | --- |
-| com.skygardenapps.mookworlds.power.sky.5 | Consumable | Sky God ×5 | US $0.99-equivalent tier |
-| com.skygardenapps.mookworlds.power.sun.5 | Consumable | Sun God ×5 | US $0.99-equivalent tier |
-| com.skygardenapps.mookworlds.power.rock.5 | Consumable | Rock God ×5 | US $0.99-equivalent tier |
-| com.skygardenapps.mookworlds.power.time.5 | Consumable | Time Slow ×5 | US $0.99-equivalent tier |
-| com.skygardenapps.mookworlds.power.bundle.12 | Consumable | Power-Up Variety Pack: three of every type (12 total) | US $1.99-equivalent tier |
-| com.skygardenapps.mookworlds.removeads | Non-consumable | Remove Ads | US $2.99-equivalent tier |
+- `com.skygardenapps.mookworlds.power.sky.5`
+- `com.skygardenapps.mookworlds.power.sun.5`
+- `com.skygardenapps.mookworlds.power.rock.5`
+- `com.skygardenapps.mookworlds.power.time.5`
+- `com.skygardenapps.mookworlds.power.bundle.12`
+- `com.skygardenapps.mookworlds.removeads`
 
-These US prices and equivalent tiers were verified in App Store Connect on October 5, 2026 across the app's 175 territories. StoreKit's localized `displayPrice` replaces the in-app US fallback copy.
+Do not submit these products, mention them in App Review notes, display prices, expose a Store/Coming Soon surface, or claim Remove Ads until Apple agreements and the full StoreKit sandbox/device matrix are complete.
 
 ## AdMob policy and implementation
 
@@ -37,22 +36,26 @@ These US prices and equivalent tiers were verified in App Store Connect on Octob
 - The first eligible presentation occurs immediately after the third loss.
 - After an impression, another requires three more losses; there is no time delay.
 - There is no arbitrary per-session impression ceiling; every later impression still requires three additional losses.
-- Ads are requested only after the result UI is safely presented, never during gameplay, result animation, purchase, or continue selection.
-- Remove Ads suppresses every interstitial request.
-- No-fill and presentation errors fail closed and gameplay continues.
-- Debug builds use Google's official iOS sample app ID and interstitial test unit.
-- Production AdMob identifiers are installed. Internal build 6 enables the release ad path but forces Google's official test interstitial ID; production demand remains off until physical-device acceptance and an explicitly approved production build.
-- UMP refreshes consent information before Google Mobile Ads starts, presents a required consent form, and blocks ad requests unless the SDK reports that ads may be requested.
-- Mook Worlds is classified as general audience, so every UMP consent-information request explicitly sends the under-age-of-consent tag as false (`isTaggedForUnderAgeOfConsent = false` in Swift).
-- A Privacy choices control appears when UMP reports that privacy options are required.
+- Ads are requested only after the result UI is safely presented, never during gameplay, result animation, or continue selection.
+- No-fill and presentation errors fail closed and gameplay continues. An unconfirmed request never resets the loss counter.
+- Fullscreen presentation is dispatched on the iOS main thread and has a bounded pre-presentation timeout.
+- Debug/simulator paths use Google's official iOS test interstitial. The production release candidate uses the real AdMob app and interstitial IDs with `MookAdsTestMode=false`.
+- UMP refreshes consent information before Google Mobile Ads starts, presents required consent forms, and blocks ad requests unless the SDK reports that ads may be requested.
+- Mook Worlds is classified as general audience, so UMP consent requests explicitly set the under-age-of-consent tag to false.
+- A Privacy Choices control appears when UMP reports that privacy options are required.
 - “Playable” creative is not promised. The integration requests ordinary interstitial demand; creative and mediation inventory determine what appears.
-- Rewarded ads are not exposed in v1.1.
+- Rewarded ads are not exposed.
 
-## External release gates
+## Verified test history
 
-1. Run StoreKit sandbox/device tests for success, cancellation, pending/Ask to Buy, duplicate callback, interrupted delivery, unfinished reconciliation, restore, reinstall, offline launch, and revoked/refunded Remove Ads.
-2. Publish the advertising-aware privacy policy before the test build; the European consent message is already published and applies to Mook Worlds.
-3. Keep the verified root `app-ads.txt` record live. AdMob identity, address PIN and bank details unlock only after Google's earnings thresholds and do not block initial serving.
-4. Complete legal review of the privacy policy and App Privacy answers against the final SDK/data behavior.
-5. Prove consent, privacy options, loss-only timing and spacing, no-fill, background/foreground, orientation, and Remove Ads suppression on a physical device.
-6. Obtain explicit approval before uploading the internal test build, switching `MookAdsTestMode` off, submission, distribution, or public release.
+- Google's official test interstitial loaded, presented, and recorded an impression in the iOS simulator.
+- The exact internal TestFlight flow exposed a device-only presentation hang; moving `present(from:)` to the main thread fixed it.
+- Physical TestFlight testing confirmed direct test presentation, automatic presentation after three losses, dismissal/return to gameplay, and return navigation from Privacy and Support.
+
+## Release gates
+
+1. Keep the verified root `app-ads.txt` record live.
+2. Reconcile App Privacy answers, age rating, privacy policy, metadata, and review notes with Google Mobile Ads/UMP and the absence of IAP.
+3. Verify the signed exported IPA has `MookAdsEnabled=true`, `MookAdsTestMode=false`, the real production ad unit, no visible test diagnostics, no Store entry point, and `get-task-allow=false`.
+4. Do not click live ads during internal QA. Use the already-completed test-demand proof as the presentation gate.
+5. Upload the exact production candidate, read back Apple processing and internal-group state, then obtain separate explicit approval before App Review submission or public release.

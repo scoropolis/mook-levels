@@ -6,7 +6,7 @@ Checkpoint date: 2026-10-05
 
 - Playable Endless destination after World 5, escalating mechanics, two-minute checkpoints, one continue, and durable local high score.
 - Versioned counted power-up inventory, starter migration, atomic consumption, stockpiles, and one-time deterministic perfect-clear rewards.
-- StoreKit 2 app bridge for five consumable pack products and one Remove Ads non-consumable, including verified unfinished-transaction reconciliation and acknowledgement.
+- Dormant StoreKit 2 bridge retained for a later release; current Store and purchase UI are unreachable.
 - AdMob app bridge with official test configuration in Debug, installed production identifiers in Release, UMP request gating/privacy options, immediate every-third-loss eligibility, and Remove Ads suppression.
 - Expanded browser regressions and iOS dependency/project wiring.
 
@@ -20,10 +20,9 @@ Checkpoint date: 2026-10-05
 
 ## Required before release candidate approval
 
-- [ ] Add the required review screenshots to the otherwise configured StoreKit products.
-- [ ] StoreKit sandbox matrix completed on a signed physical-device build.
+- [x] Defer StoreKit products, screenshots, and sandbox testing to a later commerce release.
 - [x] Production AdMob IDs installed; Debug/sample IDs remain limited to Debug code paths.
 - [ ] UMP/consent, age handling, territory behavior, and privacy disclosures approved and device-tested.
-- [ ] Remove Ads restore, refund/revocation, reinstall, and multi-device expectations approved.
+- [x] Remove Ads omitted from this release; no restore/refund claim is presented.
 - [ ] Full browser tests, web build, unsigned Release simulator build, signed device build, and visual states re-proved from the exact release commit.
 - [ ] Separate explicit approval obtained for upload, commercial settings, submission, and public release.

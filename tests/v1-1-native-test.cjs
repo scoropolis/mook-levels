@@ -11,6 +11,7 @@ const podfile = read('ios/App/Podfile');
 const podlock = read('ios/App/Podfile.lock');
 const project = read('ios/App/App.xcodeproj/project.pbxproj');
 const monetization = read('docs/MONETIZATION.md');
+const web = read('index.html');
 
 const productIDs = [
   'com.skygardenapps.mookworlds.power.sky.5',
@@ -48,7 +49,9 @@ assert.match(appID || '', /^ca-app-pub-\d+~\d+$/);
 assert.match(interstitialID || '', /^ca-app-pub-\d+\/\d+$/);
 assert.notEqual(appID, 'ca-app-pub-3940256099942544~1458002511');
 assert.match(plist, /<key>MookAdsEnabled<\/key>\s*<true\/>/);
-assert.match(plist, /<key>MookAdsTestMode<\/key>\s*<true\/>/);
+assert.match(plist, /<key>MookAdsTestMode<\/key>\s*<false\/>/);
+assert.match(web, /const STORE_ENABLED = false;/);
+assert.match(web, /id="storeButton"[^>]*hidden/);
 assert.equal((plist.match(/<key>SKAdNetworkIdentifier<\/key>/g) || []).length, 50);
 assert.match(podfile, /Google-Mobile-Ads-SDK/);
 assert.match(podlock, /Google-Mobile-Ads-SDK \(12\.14\.0\)/);
@@ -58,4 +61,4 @@ assert.doesNotMatch(bridge, /registerPluginType\(/, 'registerPluginType does not
 assert.match(scene, /rootViewController\s*=\s*MookBridgeViewController\(\)/, 'the runtime scene must instantiate the controller that registers native commerce');
 assert.doesNotMatch(scene, /rootViewController\s*=\s*CAPBridgeViewController\(\)/, 'the generic bridge leaves MookCommerce unavailable and greys every purchase');
 for (const file of ['MookBridgeViewController.swift','MookCommercePlugin.swift','MookAdsPlugin.swift']) assert.match(project, new RegExp(file.replace('.', '\\.')));
-console.log(JSON.stringify({ok:true,products:productIDs.length,admob:'production-identifiers-configured',ump:'consent-gated-general-audience',releaseAdsEnabled:false}));
+console.log(JSON.stringify({ok:true,productsDeferred:productIDs.length,admob:'production-identifiers-configured',ump:'consent-gated-general-audience',releaseAdsEnabled:true,storeEnabled:false}));
