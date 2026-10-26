@@ -9,6 +9,7 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
     public let jsName = "MookAds"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "configure", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getStatus", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "showInterstitial", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "showPrivacyOptions", returnType: CAPPluginReturnPromise)
     ]
@@ -33,6 +34,7 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
         #else
         isEnabled = Bundle.main.object(forInfoDictionaryKey: "MookAdsEnabled") as? Bool ?? false
         #endif
+        NSLog("[MookAds] configure enabled=%@ testMode=%@", isEnabled.description, isTestMode().description)
         guard isEnabled else {
             call.resolve([
                 "configured": false,
@@ -67,6 +69,7 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
                 }
                 MobileAds.shared.start { [weak self] _ in
                     self?.loadInterstitial()
+                    NSLog("[MookAds] SDK started; loading interstitial")
                     call.resolve([
                         "configured": true,
                         "testMode": self?.isTestMode() ?? false,
@@ -85,6 +88,16 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
         ConsentForm.presentPrivacyOptionsForm(from: controller) { error in
             call.resolve(["shown": error == nil])
         }
+    }
+
+    @objc public func getStatus(_ call: CAPPluginCall) {
+        call.resolve([
+            "enabled": isEnabled,
+            "testMode": isTestMode(),
+            "canRequestAds": ConsentInformation.shared.canRequestAds,
+            "adReady": interstitial != nil,
+            "loadError": loadError ?? ""
+        ])
     }
 
     @objc public func showInterstitial(_ call: CAPPluginCall) {
@@ -120,6 +133,20 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
             self.interstitial = ad
             self.loadError = error?.localizedDescription
             self.interstitial?.fullScreenContentDelegate = self
+            if let error {
+                NSLog("[MookAds] interstitial load failed: %@", error.localizedDescription)
+            } else {
+                NSLog("[MookAds] interstitial ready testMode=%@", self.isTestMode().description)
+                #if targetEnvironment(simulator)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+                    guard let self, self.isTestMode(), let ad = self.interstitial, let controller = self.bridge?.viewController else { return }
+                    ad.fullScreenContentDelegate = self
+                    self.interstitial = nil
+                    NSLog("[MookAds] simulator diagnostic presenting test interstitial")
+                    ad.present(from: controller)
+                }
+                #endif
+            }
         }
     }
 
@@ -128,14 +155,24 @@ public final class MookAdsPlugin: CAPPlugin, CAPBridgedPlugin, FullScreenContent
     }
 
     public func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
+        NSLog("[MookAds] interstitial dismissed")
         presentationCall?.resolve(["shown": true])
         presentationCall = nil
         loadInterstitial()
     }
 
     public func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
+        NSLog("[MookAds] interstitial presentation failed: %@", error.localizedDescription)
         presentationCall?.resolve(["shown": false, "reason": "presentation-failed", "detail": error.localizedDescription])
         presentationCall = nil
         loadInterstitial()
+    }
+
+    public func adWillPresentFullScreenContent(_ ad: FullScreenPresentingAd) {
+        NSLog("[MookAds] interstitial will present")
+    }
+
+    public func adDidRecordImpression(_ ad: FullScreenPresentingAd) {
+        NSLog("[MookAds] interstitial impression recorded")
     }
 }

@@ -34,6 +34,7 @@ assert.match(ads, /ca-app-pub-3940256099942544\/4411468910/);
 assert.match(ads, /#if DEBUG/);
 assert.match(ads, /MookAdsEnabled/);
 assert.match(ads, /MookAdsTestMode/);
+assert.match(ads, /CAPPluginMethod\(name: "getStatus"/);
 assert.match(ads, /requestConsentInfoUpdate/);
 assert.match(ads, /loadAndPresentIfRequired/);
 assert.match(ads, /isTaggedForUnderAgeOfConsent\s*=\s*false/);

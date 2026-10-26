@@ -638,13 +638,20 @@ let browser;
         restore: async () => { window.__nativeCalls.restores += 1; return {removeAds:true,pending:[]}; }
       },
       MookAds: {
-        configure: async () => ({}),
+        configure: async () => ({testMode:true,privacyOptionsRequired:false}),
+        getStatus: async () => ({enabled:true,testMode:true,canRequestAds:true,adReady:true,loadError:''}),
         showInterstitial: async () => { window.__nativeCalls.ads += 1; return {shown:true}; }
       }
     } };
   });
   await v11Page.goto('http://127.0.0.1:8891/', { waitUntil: 'networkidle' });
   await v11Page.click('#worldsButton');
+  await wait(1300);
+  assert.equal(await v11Page.locator('#adTestButton').isVisible(),true,'internal test builds expose a direct ad diagnostic control');
+  assert.equal(await v11Page.locator('#adStatus').textContent(),'Test ad ready');
+  await v11Page.click('#adTestButton');
+  assert.equal(await v11Page.locator('#adStatus').textContent(),'Test ad presented and closed');
+  await v11Page.evaluate(()=>{window.__nativeCalls.ads=0;});
   const endlessConfigs = await v11Page.evaluate(() => [0,30000,60000,90000,120000,240000].map(window.__mookLevels.getEndlessConfig));
   assert.deepEqual(endlessConfigs.map(item => item.mechanics), [
     ['green','red'],['green','red','blue'],['green','red','blue','yellow'],

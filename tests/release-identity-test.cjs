@@ -19,7 +19,7 @@ assert.equal((project.match(/PRODUCT_BUNDLE_IDENTIFIER = com\.skygardenapps\.moo
 assert.equal((project.match(/DEVELOPMENT_TEAM = 588GPA4GL2;/g) || []).length, 2);
 assert.equal((project.match(/CODE_SIGN_STYLE = Automatic;/g) || []).length, 2);
 assert.equal((project.match(/MARKETING_VERSION = 1\.3;/g) || []).length, 2);
-assert.equal((project.match(/CURRENT_PROJECT_VERSION = 7;/g) || []).length, 2);
+assert.equal((project.match(/CURRENT_PROJECT_VERSION = 8;/g) || []).length, 2);
 assert.doesNotMatch(project, /PROVISIONING_PROFILE_SPECIFIER/);
 assert.match(infoPlist, /<key>UIRequiresFullScreen<\/key>\s*<true\/>/);
 assert.match(metadata, /Bundle ID:\*\* `com\.skygardenapps\.mookworlds`/);
